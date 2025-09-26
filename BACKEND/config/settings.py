@@ -103,12 +103,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Modo producción: lista blanca
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[
-    "https://fastidious-hamster-a7997b.netlify.app",
+    "https://fastidious-hamster-a7997b.netlify.app",  # TODO: reemplaza por tu dominio final en Netlify
     "http://localhost:5173",
+])
+CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES", default=[
+    r"^https:\/\/deploy-preview-\d+\.netlify\.app$",
 ])
 
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
     "https://fastidious-hamster-a7997b.netlify.app",
+    "https://*.netlify.app",
     "https://planb-production.up.railway.app",
 ])
 
