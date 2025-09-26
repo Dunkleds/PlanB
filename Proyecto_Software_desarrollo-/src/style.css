@@ -1,0 +1,8 @@
+/* reset básico y fondo global */
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #1f1f2e; /* mismo fondo que .home */
+}
+* { box-sizing: border-box; }
