@@ -2,8 +2,7 @@ import { defineStore } from 'pinia'
 import { api, loginWithEmailQuick, logout } from '@/lib/api'
 
 export function registerUser(email: string, password: string): Promise<any> {
-
-  return api.post('/api/register/', { email, password })
+  return api.post('/api/register/', { email, password }) // TODO adjust endpoint if backend differs
 }
 
 interface AuthState {
@@ -21,6 +20,10 @@ export const useAuth = defineStore('auth', {
       await loginWithEmailQuick(email, password)
       this.email = email
       this.isAuth = true
+    },
+    async register(email: string, password: string): Promise<void> {
+      await registerUser(email, password)
+      await this.login(email, password)
     },
     signout(): void {
       logout()

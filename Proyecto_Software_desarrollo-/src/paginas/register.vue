@@ -21,10 +21,10 @@
           <h2 class="text-2xl font-semibold tracking-tight">Registro</h2>
           <p class="mt-1 text-sm text-slate-300">Crea tu cuenta con correo y contraseña.</p>
 
-          <form class="mt-6 space-y-4" @submit.prevent="register" novalidate>
+          <form class="mt-6 space-y-4" @submit.prevent="doRegister" novalidate>
             <!-- Email -->
             <label class="block">
-              <span class="sr-only">Correo</span>
+              <span class="sr-only">Dirección de correo</span>
               <input
                 v-model="email"
                 type="email"
@@ -61,6 +61,11 @@
               />
             </label>
 
+            <!-- Error inline -->
+            <p v-if="errorMsg" class="text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
+              {{ errorMsg }}
+            </p>
+
             <!-- Social (placeholder) -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button type="button" class="rounded-xl px-3 py-2 bg-[#3b5998] hover:opacity-95">Facebook</button>
@@ -75,15 +80,19 @@
               </router-link>
               <button
                 type="submit"
-                class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-2.5 font-medium hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40"
+                :disabled="loading"
+                class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-2.5 font-medium hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60"
               >
-                Continuar
+                <svg v-if="loading" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="4"/>
+                  <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="4"/>
+                </svg>
+                <span>Continuar</span>
               </button>
             </div>
           </form>
         </div>
 
-        <!-- Nota -->
         <p class="mt-6 text-center text-sm text-slate-400">
           Al registrarte aceptas nuestros <a href="#" class="underline underline-offset-4 hover:text-white">Términos</a>.
         </p>
@@ -94,39 +103,39 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import axios from "axios";
+import { useRouter } from "vue-router";
+import { useAuth } from "@/services/auth";
 
-const API_BASE = (import.meta.env.VITE_API_URL as string) || "";
-if (!API_BASE) {
-  console.warn("VITE_API_URL no está definida. Configúrala para que el registro funcione.");
-}
-const api = axios.create({ baseURL: API_BASE });
+const router = useRouter();
+const auth = useAuth();
 
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
+const loading = ref(false);
+const errorMsg = ref("");
 
-const register = async () => {
+const doRegister = async () => {
+  errorMsg.value = "";
+
   if (password.value !== confirmPassword.value) {
-    alert("Las contraseñas no coinciden");
+    errorMsg.value = "Las contraseñas no coinciden";
     return;
   }
+
+  loading.value = true;
   try {
-    const { data } = await api.post("/api/register/", {
-      email: email.value,
-      password: password.value,
-    });
-    alert(data?.message ?? "Usuario creado con éxito");
-    email.value = "";
-    password.value = "";
-    confirmPassword.value = "";
-  } catch (error: any) {
-    const msg =
-      error?.response?.data?.error ||
-      error?.response?.data?.detail ||
-      error?.message ||
+    await auth.register(email.value, password.value);
+    router.push("/");
+  } catch (err: any) {
+    errorMsg.value =
+      err?.response?.data?.message ||
+      err?.response?.data?.detail ||
+      err?.response?.data?.error ||
+      err?.message ||
       "Error en el registro";
-    alert(String(msg));
+  } finally {
+    loading.value = false;
   }
 };
 </script>

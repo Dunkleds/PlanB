@@ -103,10 +103,11 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAuth } from "@/services/auth";
 
 const router = useRouter();
+const route = useRoute();
 const auth = useAuth();
 
 const email = ref("");
@@ -120,12 +121,14 @@ const doLogin = async () => {
   loading.value = true;
   try {
     await auth.login(email.value, password.value);
-    router.push("/");
-  } catch (e: any) {
+    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : "/";
+    router.push(redirect || "/");
+  } catch (err: any) {
     errorMsg.value =
-      e?.response?.data?.detail ||
-      e?.response?.data?.error ||
-      e?.message ||
+      err?.response?.data?.message ||
+      err?.response?.data?.detail ||
+      err?.response?.data?.error ||
+      err?.message ||
       "Error de login";
   } finally {
     loading.value = false;

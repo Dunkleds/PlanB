@@ -29,6 +29,7 @@ const router = createRouter({
 })
 
 // Guard mínimo: si la ruta pide auth y no hay token, manda a /login
+// NOTE: this guard stays local-storage based until an auth.init() bootstraps the user profile.
 router.beforeEach((to) => {
   if (!to.meta?.requiresAuth) return true
 
