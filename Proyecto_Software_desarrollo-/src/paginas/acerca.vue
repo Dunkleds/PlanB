@@ -1,64 +1,219 @@
 <template>
-  <div class="home">
-    <!-- NAVBAR -->
-    <header class="navbar">
-      <button @click="toggleMenu" class="menu-btn">☰</button>
-      <router-link to="/" class="logo-link">
-        <h1 class="logo">iEssence</h1>
-      </router-link>
-      <div class="user-actions">
-        <router-link to="/login" class="btn-link">Login</router-link>
-        <router-link to="/register" class="btn-link">Registrarse</router-link>
-        <span class="user-icon">👤</span>
-      </div>
+  <div class="min-h-screen bg-slate-900 text-white">
+    <!-- Header (mismo que home.vue) -->
+    <header
+      class="sticky top-0 z-50 backdrop-blur bg-slate-900/70 border-b border-white/10"
+      @keydown.esc="closeAll"
+    >
+      <nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <!-- Izquierda: botón menú + logo -->
+        <div class="flex items-center gap-3">
+          <!-- Botón menú móvil -->
+          <button
+            class="inline-flex items-center justify-center p-2 rounded-xl hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 lg:hidden"
+            :aria-expanded="menuOpen ? 'true' : 'false'"
+            aria-controls="mobile-menu"
+            @click="toggleMenu"
+          >
+            <span class="sr-only">Abrir menú</span>
+            <svg v-if="!menuOpen" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <svg v-else class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+
+          <!-- Logo -->
+          <router-link to="/" class="flex items-center gap-2 group">
+            <div class="h-8 w-8 rounded-xl bg-gradient-to-br from-fuchsia-500 to-indigo-500 shadow-md group-hover:scale-105 transition-transform"></div>
+            <h1 class="text-xl font-semibold tracking-tight">iEssence</h1>
+          </router-link>
+
+          <!-- Navegación desktop -->
+          <ul class="hidden lg:flex items-center gap-1 ml-6">
+            <li>
+              <router-link
+                to="/"
+                class="px-3 py-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
+                :class="isActive('/')"
+              >Inicio</router-link>
+            </li>
+            <li>
+              <router-link
+                to="/acerca"
+                class="px-3 py-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
+                :class="isActive('/acerca')"
+              >Acerca</router-link>
+            </li>
+            <li>
+              <router-link
+                to="/carrito"
+                class="px-3 py-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 relative"
+                :class="isActive('/carrito')"
+              >
+                Carro
+                <span
+                  v-if="cartCount>0"
+                  class="absolute -top-1 -right-2 text-[10px] leading-none rounded-full bg-fuchsia-500 px-1.5 py-0.5"
+                >{{ cartCount }}</span>
+              </router-link>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Derecha: acciones usuario -->
+        <div class="flex items-center gap-2">
+          <router-link
+            to="/login"
+            class="hidden sm:inline-flex items-center px-3 py-2 rounded-lg border border-white/20 hover:border-white/40 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
+          >Login</router-link>
+
+          <router-link
+            to="/register"
+            class="hidden sm:inline-flex items-center px-3 py-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40"
+          >Registrarse</router-link>
+
+          <div class="relative">
+            <button
+              ref="userBtn"
+              @click="toggleUserMenu"
+              class="inline-flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
+              :aria-expanded="userMenuOpen ? 'true' : 'false'"
+              aria-haspopup="menu"
+            >
+              <span class="sr-only">Abrir menú de usuario</span>
+              <span class="h-8 w-8 rounded-full bg-white/15 grid place-items-center text-sm">👤</span>
+              <svg class="h-4 w-4 opacity-70" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+              </svg>
+            </button>
+
+            <transition
+              enter-active-class="transition ease-out duration-150"
+              enter-from-class="opacity-0 translate-y-1"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition ease-in duration-100"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 translate-y-1"
+            >
+              <div
+                v-if="userMenuOpen"
+                ref="userMenu"
+                class="absolute right-0 mt-2 w-56 rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur shadow-xl p-1"
+                role="menu"
+                @keydown.esc.stop="userMenuOpen=false"
+              >
+                <router-link to="/perfil" class="block px-3 py-2 rounded-lg hover:bg-white/10" role="menuitem">Perfil</router-link>
+                <router-link to="/privado" class="block px-3 py-2 rounded-lg hover:bg-white/10" role="menuitem">Panel privado</router-link>
+                <hr class="my-1 border-white/10">
+                <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10" role="menuitem">Cerrar sesión</button>
+              </div>
+            </transition>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Menú móvil -->
+      <transition
+        enter-active-class="transition duration-150 ease-out"
+        enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition duration-100 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-2"
+      >
+        <div
+          v-if="menuOpen"
+          id="mobile-menu"
+          class="lg:hidden border-t border-white/10 bg-slate-900/90 backdrop-blur"
+        >
+          <div class="px-4 py-3 space-y-1">
+            <router-link @click="closeAll" to="/" class="block px-3 py-2 rounded-lg hover:bg-white/10" :class="isActive('/')">Inicio</router-link>
+            <router-link @click="closeAll" to="/carrito" class="block px-3 py-2 rounded-lg hover:bg-white/10" :class="isActive('/carrito')">
+              Carro <span v-if="cartCount>0" class="ml-2 text-xs rounded-full bg-fuchsia-500 px-1.5 py-0.5 align-middle">{{ cartCount }}</span>
+            </router-link>
+            <router-link @click="closeAll" to="/acerca" class="block px-3 py-2 rounded-lg hover:bg-white/10" :class="isActive('/acerca')">Acerca de nosotros</router-link>
+
+            <div class="pt-2 mt-2 border-t border-white/10 grid grid-cols-2 gap-2">
+              <router-link @click="closeAll" to="/login" class="px-3 py-2 text-center rounded-lg border border-white/20 hover:bg-white/10">Login</router-link>
+              <router-link @click="closeAll" to="/register" class="px-3 py-2 text-center rounded-lg bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:opacity-95">Registrarse</router-link>
+            </div>
+          </div>
+        </div>
+      </transition>
     </header>
 
-    <!-- SIDEBAR -->
-    <aside v-if="menuOpen" class="sidebar">
-      <div class="sidebar-header">
-        <button @click="toggleMenu" class="close-btn">✖</button>
-      </div>
-      <ul>
-        <li><router-link to="/">Catálogo</router-link></li>
-        <li><router-link to="/carrito">Carro 🛒</router-link></li>
-        <li><router-link to="/acerca">Acerca de nosotros</router-link></li>
-      </ul>
-    </aside>
-
-    <!-- CONTENEDOR PRINCIPAL -->
-    <main class="main-content">
-      <!-- Sección Acerca de Nosotros: imagen + texto lado a lado -->
-      <section class="about-section">
-        <div class="about-content">
-          <!-- Imagen a la izquierda -->
-          <div class="image-column">
-            <img src="/generico1.jpg" alt="Tienda iEssence" class="about-img" />
+    <!-- Contenido principal -->
+    <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+      <!-- Card “Acerca de nosotros” -->
+      <section class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur p-6 md:p-8 shadow-xl">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-8 items-start">
+          <!-- Imagen -->
+          <div class="md:col-span-2">
+            <img
+              src="/generico1.jpg"
+              alt="Tienda iEssence"
+              class="w-full h-56 md:h-72 object-cover rounded-xl shadow-lg"
+            />
           </div>
-          <!-- Texto a la derecha -->
-          <div class="text-column">
-            <h2>Acerca de Nosotros</h2>
-            <p>
-              Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget
-              dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes,
-              nascetur ridiculus mus. Donec quam felis.
+          <!-- Texto -->
+          <div class="md:col-span-3">
+            <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Acerca de Nosotros</h2>
+            <p class="mt-3 text-slate-300 leading-relaxed">
+              Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.
+              Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus
+              mus. Donec quam felis.
             </p>
+            <!-- CTA opcional -->
+            <div class="mt-5 flex flex-wrap gap-3">
+              <router-link
+                to="/carrito"
+                class="inline-flex items-center px-4 py-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40"
+              >
+                Ver productos
+              </router-link>
+              <router-link
+                to="/"
+                class="inline-flex items-center px-4 py-2 rounded-xl border border-white/20 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
+              >
+                Ir al inicio
+              </router-link>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- Sección de contacto -->
-      <section class="contact-section">
-        <div class="contact-info">
-          <div class="location">
-            <span class="icon">📍</span>
-            <span>Ubicación.....</span>
+      <!-- Card de contacto -->
+      <section class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur p-6 shadow-xl lg:col-span-2">
+          <h3 class="text-xl font-semibold">Contáctanos</h3>
+          <div class="mt-4 space-y-3">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl leading-none">📍</span>
+              <span class="text-slate-300">Ubicación.....</span>
+            </div>
+            <div class="flex items-center gap-6 flex-wrap">
+              <div class="flex items-center gap-2">
+                <span class="text-xl leading-none">📞</span>
+                <span class="text-slate-300">Teléfono</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xl leading-none">✉️</span>
+                <span class="text-slate-300">Correo</span>
+              </div>
+            </div>
           </div>
-          <div class="contact-details">
-            <span class="icon">📞</span>
-            <span>Telefono</span>
-            <span class="icon">✉️</span>
-            <span>Correo</span>
-          </div>
+        </div>
+
+        <!-- Bloque extra (opcional: horario, mapa, redes) -->
+        <div class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur p-6 shadow-xl">
+          <h3 class="text-xl font-semibold">Horario</h3>
+          <ul class="mt-4 space-y-1 text-slate-300">
+            <li>Lun–Vie: 09:00–18:00</li>
+            <li>Sábados: 10:00–14:00</li>
+            <li>Domingo: Cerrado</li>
+          </ul>
         </div>
       </section>
     </main>
@@ -66,205 +221,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import { useRoute } from "vue-router";
 
-const menuOpen = ref(false)
-const toggleMenu = () => {
-  menuOpen.value = !menuOpen.value
-}
+const route = useRoute();
+const menuOpen = ref(false);
+const userMenuOpen = ref(false);
+const cartCount = ref(0); // actualiza según tu estado real
+
+const userBtn = ref<HTMLElement | null>(null);
+const userMenu = ref<HTMLElement | null>(null);
+
+const toggleMenu = () => (menuOpen.value = !menuOpen.value);
+const toggleUserMenu = () => (userMenuOpen.value = !userMenuOpen.value);
+const closeAll = () => { menuOpen.value = false; userMenuOpen.value = false; };
+
+const handleClickOutside = (e: MouseEvent) => {
+  const t = e.target as Node;
+  if (userMenuOpen.value) {
+    if (userMenu.value && !userMenu.value.contains(t) && userBtn.value && !userBtn.value.contains(t)) {
+      userMenuOpen.value = false;
+    }
+  }
+};
+
+onMounted(() => document.addEventListener("click", handleClickOutside));
+onBeforeUnmount(() => document.removeEventListener("click", handleClickOutside));
+
+const isActive = (to: string) => {
+  const active = route.path === to || (route.path.startsWith(to) && to !== "/");
+  return active ? "bg-white/10" : "";
+};
 </script>
-
-<style scoped>
-/* Estilos generales */
-.home {
-  font-family: Arial, sans-serif;
-  color: #fff;
-  background-color: #1f1f2e;
-  min-height: 100vh;
-}
-
-/* Navbar */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #243447;
-  padding: 1rem;
-}
-
-.menu-btn {
-  font-size: 1.5rem;
-  background: none;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.logo {
-  font-size: 1.5rem;
-}
-
-.user-actions {
-  display: flex;
-  align-items: center;
-}
-
-.btn-link {
-  margin: 0 0.5rem;
-  text-decoration: none;
-  border: 1px solid white;
-  color: white;
-  padding: 0.3rem 0.7rem;
-  border-radius: 5px;
-  transition: background 0.2s;
-}
-
-.btn-link:hover {
-  background: white;
-  color: #243447;
-}
-
-.user-icon {
-  margin-left: 10px;
-}
-
-/* Sidebar */
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 200px;
-  height: 100%;
-  background-color: #2e3a4f;
-  padding: 1rem;
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-}
-
-.sidebar li {
-  margin: 1rem 0;
-}
-
-.sidebar a {
-  color: white;
-  text-decoration: none;
-}
-
-.sidebar a:hover {
-  text-decoration: underline;
-}
-
-/* Contenido principal */
-.main-content {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Sección Acerca de Nosotros */
-.about-section {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-}
-
-.about-content {
-  display: flex;
-  gap: 2rem;
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-.image-column {
-  flex: 1;
-  min-width: 250px;
-}
-
-.about-img {
-  max-width: 100%;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.text-column {
-  flex: 2;
-  min-width: 300px;
-}
-
-.text-column h2 {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
-  color: #1a2a3e;
-}
-
-.text-column p {
-  font-size: 1.1rem;
-  line-height: 1.6;
-  color: #333;
-}
-
-/* Sección de contacto */
-.contact-section {
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.contact-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.location {
-  display: flex;
-  align-items: center;
-  font-size: 1.1rem;
-  color: #333;
-}
-
-.location .icon {
-  margin-right: 0.5rem;
-}
-
-.contact-details {
-  display: flex;
-  gap: 1.5rem;
-  font-size: 1.1rem;
-  color: #333;
-}
-
-.contact-details .icon {
-  margin-right: 0.5rem;
-}
-
-/* click boton */
-.logo-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-/* imagen */
-@media (max-width: 768px) {
-  .about-content {
-    flex-direction: column;
-  }
-
-  .image-column,
-  .text-column {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-
-  .contact-details {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}
-</style>
