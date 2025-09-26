@@ -1,8 +1,10 @@
 [build]
-  command = "npm run build"
+  base    = "Proyecto_Software_Desarrollo-"
+  command = "npm ci && npm run build"
   publish = "dist"
 
+# SPA redirect para Vue Router (evita 404 al refrescar /login, etc.)
 [[redirects]]
   from = "/*"
-  to   = "/index.html"
+  to = "/index.html"
   status = 200
