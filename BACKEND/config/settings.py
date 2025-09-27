@@ -1,7 +1,8 @@
 from pathlib import Path
 import environ
 import os
-from datetime import timedelta # ¡Importación necesaria para la configuración JWT!
+from datetime import timedelta  # ¡Importación necesaria para la configuración JWT!
+import dj_database_url  # ← añade esto
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,7 +22,7 @@ DEBUG = env.bool("DEBUG", default=False)
 
 # Producción: dominios Railway + Netlify + local
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[
-    "planb-production.up.railway.app",
+    "backend-production-e5d6.up.railway.app",
     "localhost",
     "127.0.0.1",
 ])
@@ -41,7 +42,7 @@ INSTALLED_APPS = [
 
     # tus apps
     "users",
-    "products",  # 👈 añadida para el catálogo
+    "products",
 ]
 
 # ⚠️ Si tienes modelo custom de usuarios en users/models.py
@@ -76,13 +77,17 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = "config.wsgi.application"
 
-# ---------------- Base de datos ----------------
+# ---------------- Base de datos (SOLO Postgres) ----------------
+# Requiere que exista DATABASE_URL; si falta, Django no arranca (como deseas)
+DATABASE_URL = env("DATABASE_URL")  # levanta ImproperlyConfigured si no está definida
+
 DATABASES = {
-    "default": env.db(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"  # local dev
+    "default": dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=env.int("DB_CONN_MAX_AGE", default=600),
+        ssl_require=True,  # fuerza SSL en producción
     )
 }
-DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=600)
 
 # ---------------- DRF / Auth ----------------
 REST_FRAMEWORK = {
@@ -91,10 +96,10 @@ REST_FRAMEWORK = {
     ),
 }
 
-# ---------------- JWT ---------------- # CONFIGURACIÓN AÑADIDA
+# ---------------- JWT ----------------
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # El token de acceso dura poco
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),   # El token de refresco dura más
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,
@@ -107,11 +112,11 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
 
-    # Configuración de Cookie para el token de refresco (necesario para el frontend)
+    # Cookie de refresh (si la usas)
     "REFRESH_TOKEN_COOKIE_NAME": "refresh_token",
     "REFRESH_TOKEN_COOKIE_DOMAIN": None,
     "REFRESH_TOKEN_COOKIE_PATH": "/",
-    "REFRESH_TOKEN_COOKIE_SECURE": not DEBUG,  # True en prod, False en local
+    "REFRESH_TOKEN_COOKIE_SECURE": not DEBUG,
     "REFRESH_TOKEN_COOKIE_HTTPONLY": True,
     "REFRESH_TOKEN_COOKIE_SAMESITE": "Lax",
 }
@@ -130,7 +135,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ---------------- CORS / CSRF ----------------
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[
-    "https://iessence.netlify.app",  # TODO: reemplazar con tu dominio real
+    "https://iessence.netlify.app",
     "http://localhost:5173",
 ])
 CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES", default=[
