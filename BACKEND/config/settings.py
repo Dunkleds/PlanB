@@ -135,7 +135,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ---------------- CORS / CSRF ----------------
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[
-    "https://iessence.netlify.app",
+    "https://planb-565.pages.dev",
     "http://localhost:5173",
 ])
 CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES", default=[
@@ -143,11 +143,10 @@ CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES", default=[
 ])
 
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
-    "https://iessence.netlify.app",
-    "https://*.netlify.app",
+    "https://planb-565.pages.dev",
     "https://backend-production-e5d6.up.railway.app",
 ])
 
 # Detrás de proxy (Railway)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-# SECURE_SSL_REDIRECT = not DEBUG
+
