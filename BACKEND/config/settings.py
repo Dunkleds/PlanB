@@ -1,6 +1,7 @@
 from pathlib import Path
 import environ
 import os
+from datetime import timedelta # ¡Importación necesaria para la configuración JWT!
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -18,7 +19,7 @@ if env_file.exists():
 SECRET_KEY = env("SECRET_KEY", default="unsafe-dev-key")
 DEBUG = env.bool("DEBUG", default=False)
 
-# Producción: dominios reales (Railway + localhost)
+# Producción: dominios Railway + Netlify + local
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[
     "planb-production.up.railway.app",
     "localhost",
@@ -40,10 +41,10 @@ INSTALLED_APPS = [
 
     # tus apps
     "users",
+    "products",  # 👈 añadida para el catálogo
 ]
 
-# ⚠️ Déjalo SOLO si tienes un modelo custom en users/models.py con migraciones.
-# Si NO tienes usuario custom, COMENTA esta línea para usar el User estándar.
+# ⚠️ Si tienes modelo custom de usuarios en users/models.py
 AUTH_USER_MODEL = "users.User"
 
 # ---------------- Middleware ----------------
@@ -75,9 +76,11 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = "config.wsgi.application"
 
-# ---------------- Base de datos (usa DATABASE_URL si está) ----------------
+# ---------------- Base de datos ----------------
 DATABASES = {
-    "default": env.db(default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")
+    "default": env.db(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"  # local dev
+    )
 }
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=600)
 
@@ -86,6 +89,31 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+}
+
+# ---------------- JWT ---------------- # CONFIGURACIÓN AÑADIDA
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # El token de acceso dura poco
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),   # El token de refresco dura más
+    "ROTATE_REFRESH_TOKENS": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "VERIFYING_KEY": None,
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+
+    # Configuración de Cookie para el token de refresco (necesario para el frontend)
+    "REFRESH_TOKEN_COOKIE_NAME": "refresh_token",
+    "REFRESH_TOKEN_COOKIE_DOMAIN": None,
+    "REFRESH_TOKEN_COOKIE_PATH": "/",
+    "REFRESH_TOKEN_COOKIE_SECURE": not DEBUG,  # True en prod, False en local
+    "REFRESH_TOKEN_COOKIE_HTTPONLY": True,
+    "REFRESH_TOKEN_COOKIE_SAMESITE": "Lax",
 }
 
 # ---------------- i18n ----------------
@@ -100,10 +128,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ---------------- CORS / CSRF ----------------
-# Modo producción: lista blanca
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[
-    "https://fastidious-hamster-a7997b.netlify.app",  # TODO: reemplaza por tu dominio final en Netlify
+    "https://fastidious-hamster-a7997b.netlify.app",  # TODO: reemplazar con tu dominio real
     "http://localhost:5173",
 ])
 CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES", default=[
@@ -116,6 +143,6 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
     "https://planb-production.up.railway.app",
 ])
 
-# Detrás de proxy (Railway sirve HTTPS)
+# Detrás de proxy (Railway)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-# SECURE_SSL_REDIRECT = not DEBUG  # opcional en prod
+# SECURE_SSL_REDIRECT = not DEBUG
