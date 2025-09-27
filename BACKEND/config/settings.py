@@ -130,7 +130,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ---------------- CORS / CSRF ----------------
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[
-    "https://fastidious-hamster-a7997b.netlify.app",  # TODO: reemplazar con tu dominio real
+    "https://iessence.netlify.app",  # TODO: reemplazar con tu dominio real
     "http://localhost:5173",
 ])
 CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES", default=[
