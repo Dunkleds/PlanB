@@ -54,11 +54,32 @@ def register_user(request):
         status=status.HTTP_201_CREATED,
     )
 
-@api_view(["GET"])
+@api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])
 def me(request):
     user: User = request.user
-    return Response({"id": user.pk, "email": user.email, "username": user.get_username()})
+
+    if request.method == "GET":
+        return Response({"id": user.pk, "email": user.email, "username": user.get_username()})
+
+    # PATCH: actualizar username
+    from .serializers import UsernameUpdateSerializer
+    serializer = UsernameUpdateSerializer(data=request.data, context={"user": user})
+    serializer.is_valid(raise_exception=True)
+    new_username = serializer.validated_data["username"]
+
+    user.username = new_username
+    user.save(update_fields=["username"])
+
+    return Response(
+        {
+            "message": "Username actualizado",
+            "id": user.pk,
+            "email": user.email,
+            "username": user.get_username(),
+        },
+        status=status.HTTP_200_OK,
+    )
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

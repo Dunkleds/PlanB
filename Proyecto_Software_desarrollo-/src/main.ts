@@ -15,5 +15,7 @@ app.use(router)
 
 app.mount('#app')
 
-useAuth(pinia).$patch({})
+const auth = useAuth(pinia)
+auth.$patch({})
+auth.fetchMe().catch(() => { /* silent: tokens inválidos */ })
 // TODO: hydrate authenticated user via /auth/me when the backend exposes it.

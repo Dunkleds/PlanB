@@ -121,8 +121,8 @@ const doLogin = async () => {
   loading.value = true;
   try {
     await auth.login(email.value, password.value);
-    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : "/";
-    router.push(redirect || "/");
+    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : '/perfil';
+    router.replace(redirect || '/perfil');
   } catch (err: any) {
     errorMsg.value =
       err?.response?.data?.message ||

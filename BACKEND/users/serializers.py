@@ -46,3 +46,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         # create_user hashea el password y respeta campos del User model
         user = User.objects.create_user(username=username, email=email, password=raw_password)
         return user
+
+class UsernameUpdateSerializer(serializers.Serializer):
+    username = serializers.CharField(min_length=3, max_length=150)
+
+    def validate_username(self, value):
+        User = get_user_model()
+        # Evita colisiones con otros usuarios
+        if User.objects.filter(username=value).exclude(pk=self.context["user"].pk).exists():
+            raise serializers.ValidationError("Este username ya está en uso.")
+        return value
+

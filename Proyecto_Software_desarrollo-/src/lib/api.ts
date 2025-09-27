@@ -174,3 +174,13 @@ export async function loginWithEmailQuick(email: string, password: string) {
 export function logout(): void {
   clearTokens()
 }
+
+export async function getMe() {
+  const { data } = await api.get('/api/auth/me/')
+  return data as { id: number; email: string; username: string }
+}
+
+export async function updateUsername(username: string) {
+  const { data } = await api.patch('/api/auth/me/', { username })
+  return data as { message: string; id: number; email: string; username: string }
+}

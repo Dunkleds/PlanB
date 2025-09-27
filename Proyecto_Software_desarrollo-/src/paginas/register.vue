@@ -126,7 +126,7 @@ const doRegister = async () => {
   loading.value = true;
   try {
     await auth.register(email.value, password.value);
-    router.push("/");
+    router.push({ name: 'perfil', query: { registered: '1' } });
   } catch (err: any) {
     errorMsg.value =
       err?.response?.data?.message ||
