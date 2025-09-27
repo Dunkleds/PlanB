@@ -1,52 +1,63 @@
+import logging
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .serializers import RegisterSerializer
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
-
 def _collect_errors(error_dict: dict) -> str:
-    messages: list[str] = []
+    msgs = []
     for value in error_dict.values():
         if isinstance(value, (list, tuple)):
-            messages.extend(str(item) for item in value)
+            msgs.extend(str(v) for v in value)
+        elif isinstance(value, dict):
+            # Para errores anidados (p.ej., {"password": ["..."]})
+            for v in value.values():
+                if isinstance(v, (list, tuple)):
+                    msgs.extend(str(x) for x in v)
+                else:
+                    msgs.append(str(v))
         else:
-            messages.append(str(value))
-    return " ".join(messages) or "Error en el registro"
-
+            msgs.append(str(value))
+    return " ".join(msgs) or "Error en el registro"
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@authentication_classes([])  # evita SessionAuthentication → no exige CSRF en anónimo
 def register_user(request):
     serializer = RegisterSerializer(data=request.data)
-    if serializer.is_valid():
-        try:
-            serializer.save()
-        except IntegrityError:
-            return Response({"error": "El email/usuario ya existe"}, status=status.HTTP_409_CONFLICT)
-        return Response({"message": "Usuario creado"}, status=status.HTTP_201_CREATED)
+    if not serializer.is_valid():
+        # Devuelve errores legibles (400), no 500
+        return Response(
+            {"error": _collect_errors(serializer.errors), "details": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    try:
+        user = serializer.save()
+    except IntegrityError as e:
+        logger.warning("IntegrityError en registro: %s", e)
+        return Response({"error": "El email/usuario ya existe."}, status=status.HTTP_409_CONFLICT)
+    except Exception as e:
+        # Loguea y responde limpio (no 500 al cliente)
+        logger.exception("Error inesperado en registro: %s", e)
+        return Response({"error": "No se pudo crear el usuario."}, status=status.HTTP_400_BAD_REQUEST)
 
-    error_msg = _collect_errors(serializer.errors)
-    return Response({"error": error_msg}, status=status.HTTP_400_BAD_REQUEST)
-
+    return Response(
+        {"message": "Usuario creado", "id": user.pk, "email": user.email, "username": user.get_username()},
+        status=status.HTTP_201_CREATED,
+    )
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def me(request):
     user: User = request.user
-    return Response(
-        {
-            "id": user.pk,
-            "email": user.email,
-            "username": user.get_username(),
-        }
-    )
-
+    return Response({"id": user.pk, "email": user.email, "username": user.get_username()})
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
