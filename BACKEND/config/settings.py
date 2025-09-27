@@ -138,9 +138,9 @@ CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES", default=[
 ])
 
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
-    "https://fastidious-hamster-a7997b.netlify.app",
+    "https://iessence.netlify.app",
     "https://*.netlify.app",
-    "https://planb-production.up.railway.app",
+    "https://backend-production-e5d6.up.railway.app",
 ])
 
 # Detrás de proxy (Railway)
