@@ -32,6 +32,7 @@ def _collect_errors(error_dict: dict) -> str:
 @authentication_classes([])  # evita SessionAuthentication → no exige CSRF en anónimo
 def register_user(request):
     serializer = RegisterSerializer(data=request.data)
+    logger.info("HIT register_user with data=%s", request.data)
     if not serializer.is_valid():
         # Devuelve errores legibles (400), no 500
         return Response(
