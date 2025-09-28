@@ -175,12 +175,21 @@ export function logout(): void {
   clearTokens()
 }
 
-export async function getMe() {
-  const { data } = await api.get('/api/auth/me/')
-  return data as { id: number; email: string; username: string }
+export interface ProfileResponse {
+  id: number
+  email: string
+  username: string
+  first_name: string
+  last_name: string
+  message?: string
 }
 
-export async function updateUsername(username: string) {
-  const { data } = await api.patch('/api/auth/me/', { username })
-  return data as { message: string; id: number; email: string; username: string }
+export async function getMe() {
+  const { data } = await api.get('/api/auth/me/')
+  return data as ProfileResponse
+}
+
+export async function updateProfileNames(first_name: string, last_name: string) {
+  const { data } = await api.patch('/api/auth/me/', { first_name, last_name })
+  return data as ProfileResponse
 }

@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .serializers import EmailTokenObtainPairSerializer, RegisterSerializer
+from .serializers import EmailTokenObtainPairSerializer, ProfileUpdateSerializer, RegisterSerializer
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -56,7 +56,14 @@ def register_user(request):
         return Response({"error": "No se pudo crear el usuario."}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response(
-        {"message": "Usuario creado", "id": user.pk, "email": user.email, "username": user.get_username()},
+        {
+            "message": "Usuario creado",
+            "id": user.pk,
+            "email": user.email,
+            "username": user.get_username(),
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+        },
         status=status.HTTP_201_CREATED,
     )
 
@@ -66,23 +73,38 @@ def me(request):
     user: User = request.user
 
     if request.method == "GET":
-        return Response({"id": user.pk, "email": user.email, "username": user.get_username()})
+        return Response(
+            {
+                "id": user.pk,
+                "email": user.email,
+                "username": user.get_username(),
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+            }
+        )
 
-    # PATCH: actualizar username
-    from .serializers import UsernameUpdateSerializer
-    serializer = UsernameUpdateSerializer(data=request.data, context={"user": user})
+    serializer = ProfileUpdateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    new_username = serializer.validated_data["username"]
 
-    user.username = new_username
-    user.save(update_fields=["username"])
+    update_fields = []
+    if "first_name" in serializer.validated_data:
+        user.first_name = serializer.validated_data["first_name"]
+        update_fields.append("first_name")
+    if "last_name" in serializer.validated_data:
+        user.last_name = serializer.validated_data["last_name"]
+        update_fields.append("last_name")
+
+    if update_fields:
+        user.save(update_fields=update_fields)
 
     return Response(
         {
-            "message": "Username actualizado",
+            "message": "Perfil actualizado",
             "id": user.pk,
             "email": user.email,
             "username": user.get_username(),
+            "first_name": user.first_name,
+            "last_name": user.last_name,
         },
         status=status.HTTP_200_OK,
     )

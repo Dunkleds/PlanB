@@ -10,15 +10,15 @@ User = get_user_model()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    # Frontend envía solo email y password
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8, trim_whitespace=False)
-    # Lo exponemos solo de salida para que el cliente sepa con qué username quedó
     username = serializers.CharField(read_only=True)
+    first_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+    last_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
 
     class Meta:
         model = User
-        fields = ("id", "email", "password", "username")
+        fields = ("id", "email", "password", "username", "first_name", "last_name")
 
     def validate_email(self, value: str) -> str:
         value = (value or "").strip().lower()
@@ -38,6 +38,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         email = validated_data["email"].strip().lower()
         raw_password = validated_data["password"]
+        first_name = (validated_data.get("first_name") or "").strip()
+        last_name = (validated_data.get("last_name") or "").strip()
 
         # Genera username único a partir del local-part del email
         base = email.split("@")[0] or "user"
@@ -48,18 +50,30 @@ class RegisterSerializer(serializers.ModelSerializer):
             username = f"{base}{i}"
 
         # create_user hashea el password y respeta campos del User model
-        user = User.objects.create_user(username=username, email=email, password=raw_password)
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=raw_password,
+            first_name=first_name,
+            last_name=last_name,
+        )
         return user
 
-class UsernameUpdateSerializer(serializers.Serializer):
-    username = serializers.CharField(min_length=3, max_length=150)
 
-    def validate_username(self, value):
-        User = get_user_model()
-        # Evita colisiones con otros usuarios
-        if User.objects.filter(username=value).exclude(pk=self.context["user"].pk).exists():
-            raise serializers.ValidationError("Este username ya está en uso.")
-        return value
+class ProfileUpdateSerializer(serializers.Serializer):
+    first_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+    last_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+
+    def validate(self, attrs):
+        first_name = attrs.get("first_name")
+        last_name = attrs.get("last_name")
+        if first_name is None and last_name is None:
+            raise serializers.ValidationError({"detail": "Proporciona al menos un campo."})
+        if first_name is not None:
+            attrs["first_name"] = first_name.strip()
+        if last_name is not None:
+            attrs["last_name"] = last_name.strip()
+        return attrs
 
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):

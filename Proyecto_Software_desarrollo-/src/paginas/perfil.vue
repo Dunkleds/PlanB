@@ -8,28 +8,39 @@
     <section class="grid gap-6">
       <!-- Card: Información básica -->
       <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-        <h2 class="text-xl font-semibold mb-4">Perfil</h2>
+        <h2 class="text-xl font-semibold mb-4">Información básica</h2>
         <div class="text-sm text-slate-300 space-y-1">
-          <p><span class="text-slate-400">ID:</span> {{ user?.id ?? '—' }}</p>
           <p><span class="text-slate-400">Email:</span> {{ user?.email ?? '—' }}</p>
-          <p><span class="text-slate-400">Username actual:</span> <span class="font-medium">{{ user?.username ?? '—' }}</span></p>
+          <p><span class="text-slate-400">Nombre:</span> <span class="font-medium">{{ user?.first_name || '—' }}</span></p>
+          <p><span class="text-slate-400">Apellido:</span> <span class="font-medium">{{ user?.last_name || '—' }}</span></p>
         </div>
       </div>
 
-      <!-- Card: Cambiar username -->
+      <!-- Card: Actualizar nombre -->
       <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-        <h2 class="text-xl font-semibold mb-4">Editar username</h2>
-        <form @submit.prevent="onChangeUsername" class="grid gap-3">
-          <div>
-            <label class="block text-sm text-slate-300 mb-1">Nuevo username</label>
-            <input
-              v-model="newUsername"
-              type="text"
-              required
-              minlength="3"
-              class="w-full rounded-xl bg-slate-800 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              placeholder="tu_nuevo_username"
-            />
+        <h2 class="text-xl font-semibold mb-4">Actualizar datos personales</h2>
+        <form @submit.prevent="onUpdateNames" class="grid gap-3">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label class="block text-sm text-slate-300 mb-1">Nombre</label>
+              <input
+                v-model="firstName"
+                type="text"
+                required
+                class="w-full rounded-xl bg-slate-800 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                placeholder="Nombre"
+              />
+            </div>
+            <div>
+              <label class="block text-sm text-slate-300 mb-1">Apellido</label>
+              <input
+                v-model="lastName"
+                type="text"
+                required
+                class="w-full rounded-xl bg-slate-800 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                placeholder="Apellido"
+              />
+            </div>
           </div>
           <div class="flex items-center gap-3">
             <button
@@ -39,7 +50,7 @@
             >
               Guardar
             </button>
-            <span v-if="savedOk" class="text-emerald-300 text-sm">Guardado correctamente</span>
+            <span v-if="savedOk" class="text-emerald-300 text-sm">Datos actualizados</span>
           </div>
           <p v-if="auth.error" class="text-red-400 text-sm">{{ auth.error }}</p>
         </form>
@@ -75,7 +86,8 @@ const auth = useAuth()
 const registered = computed(() => route.query.registered === '1')
 const user = computed(() => auth.user)
 
-const newUsername = ref('')
+const firstName = ref('')
+const lastName = ref('')
 const savedOk = ref(false)
 
 onMounted(async () => {
@@ -84,12 +96,13 @@ onMounted(async () => {
     return
   }
   await auth.fetchMe()
-  newUsername.value = auth.user.username ?? ''
+  firstName.value = auth.user.first_name ?? ''
+  lastName.value = auth.user.last_name ?? ''
 })
 
-async function onChangeUsername() {
+async function onUpdateNames() {
   savedOk.value = false
-  await auth.changeUsername(newUsername.value.trim())
+  await auth.updateNames(firstName.value.trim(), lastName.value.trim())
   savedOk.value = true
 }
 

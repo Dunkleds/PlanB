@@ -1,15 +1,24 @@
 import { defineStore } from 'pinia'
-import { api, loginWithEmailQuick, logout, getMe, updateUsername } from '@/lib/api'
+import { api, loginWithEmailQuick, logout, getMe, updateProfileNames } from '@/lib/api'
 import { useCart } from '@/stores/cart'
 
-export function registerUser(email: string, password: string): Promise<any> {
-  return api.post('/api/register/', { email, password }) // backend mapea a users.register
+export interface RegisterPayload {
+  email: string
+  password: string
+  first_name?: string
+  last_name?: string
+}
+
+export function registerUser(payload: RegisterPayload): Promise<any> {
+  return api.post('/api/register/', payload) // backend mapea a users.register
 }
 
 interface UserInfo {
   id: number | null
   email: string | null
   username: string | null
+  first_name: string | null
+  last_name: string | null
 }
 
 interface AuthState {
@@ -22,7 +31,7 @@ interface AuthState {
 export const useAuth = defineStore('auth', {
   state: (): AuthState => ({
     isAuth: !!localStorage.getItem('access_token'),
-    user: { id: null, email: null, username: null },
+    user: { id: null, email: null, username: null, first_name: null, last_name: null },
     loading: false,
     error: null,
   }),
@@ -46,11 +55,11 @@ export const useAuth = defineStore('auth', {
       }
     },
 
-    async register(email: string, password: string): Promise<void> {
+    async register(email: string, password: string, firstName?: string, lastName?: string): Promise<void> {
       this.loading = true
       this.error = null
       try {
-        await registerUser(email, password)
+        await registerUser({ email, password, first_name: firstName, last_name: lastName })
         // Autologin
         await this.login(email, password)
       } catch (e: any) {
@@ -65,21 +74,33 @@ export const useAuth = defineStore('auth', {
       if (!this.isAuth) return
       try {
         const data = await getMe()
-        this.user = { id: data.id, email: data.email, username: data.username }
+        this.user = {
+          id: data.id,
+          email: data.email,
+          username: data.username,
+          first_name: data.first_name,
+          last_name: data.last_name,
+        }
       } catch {
         // token inválido => cerrar sesión
         this.signout()
       }
     },
 
-    async changeUsername(newUsername: string): Promise<void> {
+    async updateNames(firstName: string, lastName: string): Promise<void> {
       this.loading = true
       this.error = null
       try {
-        const data = await updateUsername(newUsername)
+        const data = await updateProfileNames(firstName, lastName)
+        this.user.first_name = data.first_name
+        this.user.last_name = data.last_name
         this.user.username = data.username
       } catch (e: any) {
-        this.error = e?.response?.data?.username?.[0] ?? e?.response?.data?.detail ?? 'No se pudo actualizar el username'
+        this.error =
+          e?.response?.data?.first_name?.[0] ??
+          e?.response?.data?.last_name?.[0] ??
+          e?.response?.data?.detail ??
+          'No se pudo actualizar el perfil'
         throw e
       } finally {
         this.loading = false
@@ -89,7 +110,7 @@ export const useAuth = defineStore('auth', {
     signout(): void {
       logout()
       this.isAuth = false
-      this.user = { id: null, email: null, username: null }
+      this.user = { id: null, email: null, username: null, first_name: null, last_name: null }
       this.error = null
       this.loading = false
       const cart = useCart()

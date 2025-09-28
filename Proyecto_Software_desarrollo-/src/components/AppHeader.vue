@@ -226,6 +226,10 @@ onBeforeUnmount(() => {
 })
 
 const displayName = computed(() => {
+  const firstName = user.value?.first_name?.trim()
+  if (firstName) {
+    return firstName
+  }
   if (user.value?.username && user.value.username.trim().length > 0) {
     return user.value.username
   }

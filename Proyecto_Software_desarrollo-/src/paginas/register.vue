@@ -8,6 +8,30 @@
           <p class="mt-1 text-sm text-slate-300">Crea tu cuenta con correo y contraseña.</p>
 
           <form class="mt-6 space-y-4" @submit.prevent="doRegister" novalidate>
+            <label class="block">
+              <span class="sr-only">Nombre</span>
+              <input
+                v-model="firstName"
+                type="text"
+                required
+                autocomplete="given-name"
+                placeholder="Nombre"
+                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-white/40"
+              />
+            </label>
+
+            <label class="block">
+              <span class="sr-only">Apellido</span>
+              <input
+                v-model="lastName"
+                type="text"
+                required
+                autocomplete="family-name"
+                placeholder="Apellido"
+                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-white/40"
+              />
+            </label>
+
             <!-- Email -->
             <label class="block">
               <span class="sr-only">Dirección de correo</span>
@@ -95,6 +119,8 @@ import { useAuth } from "@/services/auth";
 const router = useRouter();
 const auth = useAuth();
 
+const firstName = ref("");
+const lastName = ref("");
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
@@ -104,6 +130,11 @@ const errorMsg = ref("");
 const doRegister = async () => {
   errorMsg.value = "";
 
+  if (!firstName.value.trim() || !lastName.value.trim()) {
+    errorMsg.value = "Ingresa tu nombre y apellido";
+    return;
+  }
+
   if (password.value !== confirmPassword.value) {
     errorMsg.value = "Las contraseñas no coinciden";
     return;
@@ -111,7 +142,7 @@ const doRegister = async () => {
 
   loading.value = true;
   try {
-    await auth.register(email.value, password.value);
+    await auth.register(email.value, password.value, firstName.value.trim(), lastName.value.trim());
     router.push({ name: 'perfil', query: { registered: '1' } });
   } catch (err: any) {
     errorMsg.value =
