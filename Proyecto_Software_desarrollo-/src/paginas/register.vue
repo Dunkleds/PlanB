@@ -1,19 +1,5 @@
 <template>
   <div class="min-h-screen bg-slate-900 text-white">
-    <!-- Topbar mínima -->
-    <header class="sticky top-0 z-40 backdrop-blur bg-slate-900/70 border-b border-white/10">
-      <nav class="mx-auto max-w-7xl h-14 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <router-link to="/" class="flex items-center gap-2 group">
-          <div class="h-7 w-7 rounded-lg bg-gradient-to-br from-fuchsia-500 to-indigo-500 shadow-md group-hover:scale-105 transition-transform"></div>
-          <span class="text-lg font-semibold">iEssence</span>
-        </router-link>
-        <router-link to="/login" class="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10">
-          Login
-        </router-link>
-      </nav>
-    </header>
-
-    <!-- Body -->
     <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
       <div class="mx-auto w-full max-w-md">
         <!-- Card -->
