@@ -1,8 +1,10 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.models import update_last_login
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.settings import api_settings
 
 User = get_user_model()
 
@@ -73,14 +75,33 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
         if not email:
             raise serializers.ValidationError({"email": ["Este campo es requerido."]})
 
+        password = attrs.get("password")
+        if not password:
+            raise serializers.ValidationError({"password": ["Este campo es requerido."]})
+
         email = email.strip().lower()
 
         try:
             user = User.objects.get(email__iexact=email)
         except User.DoesNotExist:
-            raise serializers.ValidationError({"email": ["No se encontró un usuario con este correo."]})
+            self.fail("no_active_account")
         except User.MultipleObjectsReturned:
-            raise serializers.ValidationError({"email": ["Más de un usuario coincide con este correo."]})
+            self.fail("no_active_account")
 
-        attrs["username"] = user.get_username()
-        return super().validate(attrs)
+        self.user = authenticate(
+            request=self.context.get("request"),
+            username=user.get_username(),
+            password=password,
+        )
+
+        if not self.user:
+            self.fail("no_active_account")
+
+        refresh = self.get_token(self.user)
+
+        data = {"refresh": str(refresh), "access": str(refresh.access_token)}
+
+        if api_settings.UPDATE_LAST_LOGIN:
+            update_last_login(None, self.user)
+
+        return data
