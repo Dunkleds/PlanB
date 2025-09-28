@@ -1,13 +1,20 @@
 import logging
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .serializers import EmailTokenObtainPairSerializer, ProfileUpdateSerializer, RegisterSerializer
+from .serializers import (
+    DispatchInfoSerializer,
+    EmailTokenObtainPairSerializer,
+    ProfileUpdateSerializer,
+    RegisterSerializer,
+)
+from .models import DispatchInfo
+from .permissions import IsOwnerOrAdmin
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -113,3 +120,17 @@ def me(request):
 @permission_classes([IsAuthenticated])
 def private_ping(_request):
     return Response({"message": "pong"})
+
+
+class DispatchInfoViewSet(viewsets.ModelViewSet):
+    serializer_class = DispatchInfoSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return DispatchInfo.objects.all()
+        return DispatchInfo.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        serializer.save()

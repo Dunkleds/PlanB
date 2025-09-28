@@ -5,6 +5,7 @@ from django.db import transaction
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
+from .models import DispatchInfo
 
 User = get_user_model()
 
@@ -119,3 +120,67 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
             update_last_login(None, self.user)
 
         return data
+
+
+class DispatchInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DispatchInfo
+        fields = (
+            "id",
+            "label",
+            "recipient_name",
+            "phone",
+            "street",
+            "number",
+            "apartment",
+            "commune",
+            "city",
+            "region",
+            "country",
+            "postal_code",
+            "is_default",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("id", "created_at", "updated_at")
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        creating = self.instance is None
+
+        if creating:
+            count = DispatchInfo.objects.filter(user=user).count()
+            if count >= 2:
+                raise serializers.ValidationError(
+                    "Solo puedes registrar hasta 2 direcciones de despacho."
+                )
+
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        user = self.context["request"].user
+        is_default = validated_data.get("is_default", False)
+
+        obj = DispatchInfo.objects.create(user=user, **validated_data)
+
+        if is_default:
+            DispatchInfo.objects.filter(user=user).exclude(pk=obj.pk).update(is_default=False)
+        else:
+            if DispatchInfo.objects.filter(user=user).count() == 1:
+                obj.is_default = True
+                obj.save(update_fields=["is_default"])
+        return obj
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        is_default = validated_data.get("is_default", instance.is_default)
+        for field, val in validated_data.items():
+            setattr(instance, field, val)
+        instance.save()
+
+        if is_default:
+            DispatchInfo.objects.filter(user=instance.user).exclude(pk=instance.pk).update(
+                is_default=False
+            )
+        return instance

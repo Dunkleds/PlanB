@@ -193,3 +193,42 @@ export async function updateProfileNames(first_name: string, last_name: string) 
   const { data } = await api.patch('/api/auth/me/', { first_name, last_name })
   return data as ProfileResponse
 }
+
+export type DispatchInfo = {
+  id: number
+  label: string
+  recipient_name: string
+  phone: string
+  street: string
+  number: string
+  apartment: string
+  commune: string
+  city: string
+  region: string
+  country: string
+  postal_code: string
+  is_default: boolean
+  created_at: string
+  updated_at: string
+}
+
+type DispatchPayload = Omit<DispatchInfo, 'id' | 'created_at' | 'updated_at'>
+
+export async function listDispatch() {
+  const { data } = await api.get('/api/dispatch/')
+  return data as DispatchInfo[]
+}
+
+export async function createDispatch(payload: DispatchPayload) {
+  const { data } = await api.post('/api/dispatch/', payload)
+  return data as DispatchInfo
+}
+
+export async function updateDispatch(id: number, payload: Partial<DispatchPayload>) {
+  const { data } = await api.patch(`/api/dispatch/${id}/`, payload)
+  return data as DispatchInfo
+}
+
+export async function deleteDispatch(id: number) {
+  await api.delete(`/api/dispatch/${id}/`)
+}
