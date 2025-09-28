@@ -163,10 +163,10 @@ function redirectToLogin() {
 }
 
 export async function loginWithEmailQuick(email: string, password: string) {
-  const username = email.split('@')[0]
-  const { data } = await api.post(TOKEN_URL, { username, password }) // TODO switch to { email, password } if backend expects email
+  const { data } = await api.post(TOKEN_URL, { email, password })
   if (data?.access) {
     setTokens(data.access, data?.refresh)
+    api.defaults.headers.Authorization = `Bearer ${data.access}`
   }
   return data
 }

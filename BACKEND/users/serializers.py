@@ -2,19 +2,22 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
 
+
 class RegisterSerializer(serializers.ModelSerializer):
-    # Frontend envía solo email y password
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True, min_length=8, trim_whitespace=False)
-    # Lo exponemos solo de salida para que el cliente sepa con qué username quedó
-    username = serializers.CharField(read_only=True)
+    password = serializers.CharField(write_only=True, min_length=6, trim_whitespace=False)
 
     class Meta:
         model = User
-        fields = ("id", "email", "password", "username")
+        fields = ("id", "email", "password", "username", "first_name", "last_name")
+        extra_kwargs = {
+            "username": {"required": False, "allow_blank": True},
+            "first_name": {"required": False, "allow_blank": True},
+            "last_name": {"required": False, "allow_blank": True},
+        }
 
     def validate_email(self, value: str) -> str:
         value = (value or "").strip().lower()
@@ -33,18 +36,18 @@ class RegisterSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         email = validated_data["email"].strip().lower()
-        raw_password = validated_data["password"]
+        username = (validated_data.get("username") or email).strip().lower()
+        password = validated_data["password"]
+        first_name = (validated_data.get("first_name") or "").strip()
+        last_name = (validated_data.get("last_name") or "").strip()
 
-        # Genera username único a partir del local-part del email
-        base = email.split("@")[0] or "user"
-        username = base
-        i = 1
-        while User.objects.filter(username=username).exists():
-            i += 1
-            username = f"{base}{i}"
-
-        # create_user hashea el password y respeta campos del User model
-        user = User.objects.create_user(username=username, email=email, password=raw_password)
+        user = User.objects.create_user(
+            email=email,
+            username=username,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+        )
         return user
 
 class UsernameUpdateSerializer(serializers.Serializer):
@@ -57,3 +60,19 @@ class UsernameUpdateSerializer(serializers.Serializer):
             raise serializers.ValidationError("Este username ya está en uso.")
         return value
 
+
+class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Permite login con email + password.
+    Internamente SimpleJWT usa la clave 'username', así que mapeamos email -> username.
+    """
+
+    username_field = "email"
+
+    def validate(self, attrs):
+        email = attrs.get("email") or attrs.get("username")
+        if not email:
+            raise serializers.ValidationError({"email": ["Este campo es requerido."]})
+        email = email.strip().lower()
+        attrs["username"] = email
+        return super().validate(attrs)
