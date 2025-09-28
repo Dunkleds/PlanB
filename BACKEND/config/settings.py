@@ -4,6 +4,7 @@ import os
 from datetime import timedelta  # ¡Importación necesaria para la configuración JWT!
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
+from corsheaders.defaults import default_headers, default_methods
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -128,6 +129,12 @@ LANGUAGE_CODE = "es-cl"
 TIME_ZONE = "America/Santiago"
 USE_I18N = True
 USE_TZ = True
+
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "authorization", "content-type"
+]
+CORS_ALLOWED_METHODS = list(default_methods)  # GET, POST, PUT, PATCH, DELETE, OPTIONS
 
 # ---------------- Static ----------------
 STATIC_URL = "/static/"
