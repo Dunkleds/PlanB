@@ -78,17 +78,24 @@
             <h2 class="text-xl font-semibold">Direcciones de despacho</h2>
             <p class="text-sm text-slate-400">Puedes registrar hasta dos direcciones y marcar una como principal.</p>
           </div>
-          <button
-            v-if="!formVisible && canAddDispatch"
-            @click="startCreateDispatch"
-            class="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2 text-sm hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
-            :disabled="dispatchLoading"
-          >
-            Nueva dirección
-          </button>
+          <div class="sm:text-right">
+            <button
+              v-if="!formVisible && canAddDispatch"
+              @click="startCreateDispatch"
+              class="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2 text-sm hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
+              :disabled="dispatchLoading"
+            >
+              Nueva dirección
+            </button>
+            <p
+              v-else
+              v-show="!formVisible"
+              class="mt-3 text-sm text-amber-300 sm:mt-0"
+            >
+              Ya tienes el máximo de direcciones. Edita o elimina una existente para agregar otra.
+            </p>
+          </div>
         </div>
-
-        <p v-else-if="!formVisible" class="mt-3 text-sm text-amber-300">Ya tienes el máximo de direcciones. Edita o elimina una existente para agregar otra.</p>
 
         <div v-if="dispatchError" class="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
           {{ dispatchError }}
@@ -142,7 +149,7 @@
           </article>
         </div>
 
-        <p v-else-if="!formVisible" class="mt-4 text-sm text-slate-300">Aún no registras direcciones de despacho.</p>
+        <p v-if="!dispatches.length && !formVisible" class="mt-4 text-sm text-slate-300">Aún no registras direcciones de despacho.</p>
 
         <form v-if="formVisible" class="mt-6 grid gap-4" @submit.prevent="submitDispatch">
           <div class="grid gap-4 sm:grid-cols-2">
