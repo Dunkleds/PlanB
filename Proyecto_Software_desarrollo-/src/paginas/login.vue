@@ -51,7 +51,7 @@
               {{ errorMsg }}
             </p>
 
-            <!-- Social (placeholder) -->
+            <!-- Social (placeholder)
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button type="button" class="rounded-xl px-3 py-2 bg-[#3b5998] hover:opacity-95">Facebook</button>
               <button type="button" class="rounded-xl px-3 py-2 bg-[#db4437] hover:opacity-95">Google</button>
@@ -79,10 +79,10 @@
           </form>
         </div>
 
-        <!-- Nota -->
+        <!-- Nota
         <p class="mt-6 text-center text-sm text-slate-400">
           ¿Olvidaste tu contraseña? <a href="#" class="underline underline-offset-4 hover:text-white">Recupérala</a>
-        </p>
+        </p>-->
       </div>
     </main>
   </div>
