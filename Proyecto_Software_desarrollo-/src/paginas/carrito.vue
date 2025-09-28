@@ -1,88 +1,204 @@
 <template>
   <div class="min-h-screen bg-slate-900 text-white">
     <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-      <h2 class="text-3xl font-semibold tracking-tight">Resumen de Carrito 🛒</h2>
+      <header class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
+        <div>
+          <h2 class="text-3xl font-semibold tracking-tight">Tu carrito</h2>
+          <p class="mt-1 text-slate-300">Revisa los productos agregados y ajusta sus cantidades.</p>
+        </div>
+        <router-link
+          to="/"
+          class="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2 text-sm hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
+        >
+          Seguir comprando
+        </router-link>
+      </header>
 
-      <!-- Tabla / lista -->
-      <section class="mt-6 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur shadow-xl overflow-hidden">
-        <!-- Desktop table -->
-        <div class="hidden md:block overflow-x-auto">
-          <table class="min-w-full text-sm">
-            <thead class="bg-white/5">
-              <tr class="[&>th]:px-4 [&>th]:py-3 [&>th]:text-left [&>th]:font-semibold [&>th]:text-slate-200">
-                <th>Imagen</th>
-                <th>ID</th>
-                <th>Producto</th>
-                <th>Precio</th>
-                <th>Cantidad</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-white/10">
-              <tr v-for="(item, idx) in carrito" :key="idx" class="hover:bg-white/5">
-                <td class="px-4 py-3">
-                  <img :src="item.imagen" :alt="item.nombre" class="h-12 w-12 object-cover rounded-md" />
-                </td>
-                <td class="px-4 py-3 text-slate-300">{{ item.id }}</td>
-                <td class="px-4 py-3">{{ item.nombre }}</td>
-                <td class="px-4 py-3">{{ formatCLP(item.precio) }}</td>
-                <td class="px-4 py-3">{{ item.cantidad }}</td>
-              </tr>
-            </tbody>
-            <tfoot class="bg-white/5">
-              <tr>
-                <td colspan="4" class="px-4 py-3 text-right font-semibold">Total</td>
-                <td class="px-4 py-3 font-semibold">{{ formatCLP(total) }}</td>
-              </tr>
-            </tfoot>
-          </table>
+      <section class="mt-8">
+        <div
+          v-if="cartLoading && !isLoaded"
+          class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur p-8 text-center"
+        >
+          <p class="text-slate-300">Cargando tu carrito…</p>
         </div>
 
-        <!-- Mobile cards -->
-        <div class="md:hidden divide-y divide-white/10">
-          <div v-for="(item, idx) in carrito" :key="idx" class="p-4 flex gap-4">
-            <img :src="item.imagen" :alt="item.nombre" class="h-16 w-16 object-cover rounded-md" />
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <h3 class="font-medium">{{ item.nombre }}</h3>
-                <span class="text-slate-300">{{ formatCLP(item.precio) }}</span>
-              </div>
-              <div class="mt-1 text-xs text-slate-400">ID: {{ item.id }}</div>
-              <div class="mt-1 text-sm">Cantidad: <span class="font-medium">{{ item.cantidad }}</span></div>
-            </div>
+        <div v-else>
+          <div
+            v-if="errorMessage"
+            class="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+          >
+            {{ errorMessage }}
           </div>
-          <div class="p-4 flex items-center justify-between bg-white/5">
-            <span class="font-semibold">Total</span>
-            <span class="font-semibold">{{ formatCLP(total) }}</span>
+
+          <div v-if="!hasItems" class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur p-10 text-center">
+            <p class="text-lg text-slate-200">Tu carrito está vacío.</p>
+            <p class="mt-2 text-sm text-slate-400">Explora nuestro catálogo y agrega productos para verlos aquí.</p>
+            <router-link
+              to="/"
+              class="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-2.5 text-sm font-medium hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40"
+            >
+              Ir al catálogo
+            </router-link>
+          </div>
+
+          <div v-else class="grid gap-6 lg:grid-cols-[2fr_1fr]">
+            <section class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur shadow-xl divide-y divide-white/10">
+              <article
+                v-for="item in items"
+                :key="item.id"
+                class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center"
+              >
+                <img
+                  :src="item.product.imagen_url || fallbackImage"
+                  :alt="item.product.nombre_producto"
+                  class="h-24 w-24 rounded-xl object-cover"
+                />
+
+                <div class="flex flex-1 flex-col gap-2">
+                  <header>
+                    <h3 class="text-lg font-semibold">{{ item.product.nombre_producto }}</h3>
+                    <p class="text-sm text-slate-300">Marca: {{ item.product.marca }}</p>
+                  </header>
+
+                  <p class="text-sm text-slate-400 line-clamp-2">{{ item.product.descripcion }}</p>
+
+                  <div class="mt-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="space-y-1">
+                      <p class="text-sm text-slate-400">Precio unidad</p>
+                      <p class="text-lg font-semibold">{{ formatCLP(item.product.precio) }}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button
+                        class="h-8 w-8 rounded-full border border-white/20 text-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60"
+                        :disabled="itemPending(item.product.id) || cartLoading"
+                        @click="changeQuantity(item.product.id, item.quantity - 1)"
+                      >
+                        −
+                      </button>
+                      <span class="min-w-[3rem] text-center text-lg font-semibold">{{ item.quantity }}</span>
+                      <button
+                        class="h-8 w-8 rounded-full border border-white/20 text-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60"
+                        :disabled="itemPending(item.product.id) || cartLoading"
+                        @click="changeQuantity(item.product.id, item.quantity + 1)"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-sm text-slate-400">Subtotal</p>
+                      <p class="text-lg font-semibold">{{ formatCLP(item.line_total) }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  class="self-start rounded-xl border border-white/20 px-3 py-2 text-xs uppercase tracking-wide text-slate-300 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60"
+                  :disabled="itemPending(item.product.id) || cartLoading"
+                  @click="removeItem(item.product.id)"
+                >
+                  Quitar
+                </button>
+              </article>
+            </section>
+
+            <aside class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur shadow-xl p-6 space-y-4">
+              <header class="flex items-center justify-between">
+                <span class="text-slate-300">Productos</span>
+                <span class="text-lg font-semibold">{{ summary.totalQuantity }}</span>
+              </header>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-300">Total</span>
+                <span class="text-2xl font-semibold">{{ totalFormatted }}</span>
+              </div>
+              <router-link
+                to="/pago"
+                class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-2.5 font-medium hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40"
+              >
+                Proceder al pago
+                <span aria-hidden="true">➤</span>
+              </router-link>
+            </aside>
           </div>
         </div>
       </section>
-
-      <!-- Acciones -->
-      <div class="mt-6 flex items-center justify-end">
-        <router-link
-          to="/pago"
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40"
-        >
-          Ir a pagar
-          <span aria-hidden="true">➤</span>
-        </router-link>
-      </div>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useAuth } from '@/services/auth'
+import { useCart } from '@/stores/cart'
 
-const carrito = ref([
-  { id: 1, nombre: "Audífonos Pro", precio: 129990, cantidad: 1, imagen: "audifonos1.png" },
-  { id: 2, nombre: "Cable USB-C", precio: 19990, cantidad: 2, imagen: "cable.png" },
-]);
+const auth = useAuth()
+const cart = useCart()
+const router = useRouter()
+const route = useRoute()
 
-const total = computed(() =>
-  carrito.value.reduce((acc, item) => acc + item.precio * item.cantidad, 0)
-);
+const { isAuth } = storeToRefs(auth)
+const { items, summary, loading, error, isLoaded } = storeToRefs(cart)
 
-const formatCLP = (n: number) =>
-  new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);
+const pendingIds = ref(new Set<number>())
+const fallbackImage = 'https://via.placeholder.com/150?text=Producto'
+
+const cartLoading = computed(() => loading.value)
+const errorMessage = computed(() => error.value)
+const hasItems = computed(() => items.value.length > 0)
+
+const formatCLP = (value: number | string) => {
+  const amount = typeof value === 'number' ? value : Number(value)
+  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount)
+}
+
+const totalFormatted = computed(() => formatCLP(summary.value.totalAmount))
+
+const itemPending = (id: number) => pendingIds.value.has(id)
+
+const changeQuantity = async (productId: number, nextQuantity: number) => {
+  if (itemPending(productId)) return
+  const updated = new Set(pendingIds.value)
+  updated.add(productId)
+  pendingIds.value = updated
+  try {
+    await cart.updateQuantity(productId, nextQuantity)
+  } finally {
+    const cleared = new Set(pendingIds.value)
+    cleared.delete(productId)
+    pendingIds.value = cleared
+  }
+}
+
+const removeItem = async (productId: number) => {
+  if (itemPending(productId)) return
+  const updated = new Set(pendingIds.value)
+  updated.add(productId)
+  pendingIds.value = updated
+  try {
+    await cart.removeItem(productId)
+  } finally {
+    const cleared = new Set(pendingIds.value)
+    cleared.delete(productId)
+    pendingIds.value = cleared
+  }
+}
+
+onMounted(async () => {
+  if (!isAuth.value) {
+    router.replace({ name: 'login', query: { redirect: route.fullPath } })
+    return
+  }
+  if (!isLoaded.value) {
+    await cart.fetchCart()
+  }
+})
+
+watch(isAuth, async (loggedIn) => {
+  if (loggedIn && !isLoaded.value) {
+    await cart.fetchCart()
+  } else if (!loggedIn) {
+    pendingIds.value = new Set()
+  }
+})
 </script>

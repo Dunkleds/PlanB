@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 class Product(models.Model):
     # La columna id_producto es la llave primaria (PK),
@@ -27,3 +29,26 @@ class Product(models.Model):
 
     def __str__(self):
         return self.nombre_producto
+
+
+class CartItem(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="cart_items",
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="cart_items",
+    )
+    quantity = models.PositiveIntegerField(default=1)
+    added_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ("user", "product")
+        verbose_name = "Item de carrito"
+        verbose_name_plural = "Items de carrito"
+
+    def __str__(self):
+        return f"{self.user} → {self.product} ({self.quantity})"

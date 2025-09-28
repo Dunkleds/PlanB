@@ -164,6 +164,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/services/auth'
+import { useCart } from '@/stores/cart'
 
 const router = useRouter()
 const route = useRoute()
@@ -174,7 +175,8 @@ const menuOpen = ref(false)
 const userMenuOpen = ref(false)
 const userBtn = ref<HTMLElement | null>(null)
 const userMenu = ref<HTMLElement | null>(null)
-const cartCount = ref(0) // integra tu estado real cuando esté disponible
+const cart = useCart()
+const { summary } = storeToRefs(cart)
 
 const toggleMenu = () => {
   menuOpen.value = !menuOpen.value
@@ -214,6 +216,9 @@ onMounted(async () => {
   if (isAuth.value && !user.value?.email) {
     await auth.fetchMe()
   }
+  if (isAuth.value) {
+    await cart.fetchCart()
+  }
 })
 
 onBeforeUnmount(() => {
@@ -239,4 +244,17 @@ const handleLogout = () => {
   closeAll()
   router.replace({ name: 'login' })
 }
+
+const cartCount = computed(() => summary.value.totalQuantity)
+
+watch(
+  () => isAuth.value,
+  async (loggedIn) => {
+    if (loggedIn) {
+      await cart.fetchCart()
+    } else {
+      cart.reset()
+    }
+  }
+)
 </script>

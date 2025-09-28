@@ -1,0 +1,32 @@
+# Generated manually to add CartItem model
+
+from django.conf import settings
+from django.db import migrations, models
+import django.db.models.deletion
+import django.utils.timezone
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ("products", "0001_initial"),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name="CartItem",
+            fields=[
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("quantity", models.PositiveIntegerField(default=1)),
+                ("added_at", models.DateTimeField(default=django.utils.timezone.now)),
+                ("product", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="cart_items", to="products.product")),
+                ("user", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="cart_items", to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                "verbose_name": "Item de carrito",
+                "verbose_name_plural": "Items de carrito",
+                "unique_together": {("user", "product")},
+            },
+        ),
+    ]

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { api, loginWithEmailQuick, logout, getMe, updateUsername } from '@/lib/api'
+import { useCart } from '@/stores/cart'
 
 export function registerUser(email: string, password: string): Promise<any> {
   return api.post('/api/register/', { email, password }) // backend mapea a users.register
@@ -34,6 +35,8 @@ export const useAuth = defineStore('auth', {
         await loginWithEmailQuick(email, password)
         this.isAuth = true
         await this.fetchMe()
+        const cart = useCart()
+        await cart.fetchCart()
       } catch (e: any) {
         this.error = e?.response?.data?.detail ?? 'No se pudo iniciar sesión'
         this.isAuth = false
@@ -89,6 +92,8 @@ export const useAuth = defineStore('auth', {
       this.user = { id: null, email: null, username: null }
       this.error = null
       this.loading = false
+      const cart = useCart()
+      cart.reset()
     },
   },
 })

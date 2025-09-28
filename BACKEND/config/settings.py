@@ -2,7 +2,8 @@ from pathlib import Path
 import environ
 import os
 from datetime import timedelta  # ¡Importación necesaria para la configuración JWT!
-import dj_database_url  # ← añade esto
+import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -77,15 +78,16 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = "config.wsgi.application"
 
-# ---------------- Base de datos (SOLO Postgres) ----------------
-# Requiere que exista DATABASE_URL; si falta, Django no arranca (como deseas)
-DATABASE_URL = env("DATABASE_URL")  # levanta ImproperlyConfigured si no está definida
+# ---------------- Base de datos ----------------
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    raise ImproperlyConfigured("Set the DATABASE_URL environment variable")
 
 DATABASES = {
     "default": dj_database_url.parse(
         DATABASE_URL,
         conn_max_age=env.int("DB_CONN_MAX_AGE", default=600),
-        ssl_require=True,  # fuerza SSL en producción
+        ssl_require=True,
     )
 }
 
@@ -149,4 +151,3 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
 
 # Detrás de proxy (Railway)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
