@@ -81,6 +81,11 @@
         <!-- Nota -->
         <p class="mt-6 text-center text-sm text-slate-400">
           ¿Olvidaste tu contraseña? <a href="#" class="underline underline-offset-4 hover:text-white">Recupérala</a>
+          <router-link
+            to="/reset-password"
+            class="underline underline-offset-4 hover:text-white"
+            >Recupérala
+          </router-link>
         </p>
       </div>
     </main>

@@ -10,6 +10,7 @@ from .models import DispatchInfo
 User = get_user_model()
 
 
+
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8, trim_whitespace=False)
@@ -184,3 +185,13 @@ class DispatchInfoSerializer(serializers.ModelSerializer):
                 is_default=False
             )
         return instance
+
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(min_length=8)

@@ -13,6 +13,7 @@ import Carrito from '@/paginas/carrito.vue'
 import Acerca from '@/paginas/acerca.vue'
 import Privado from '@/paginas/privado.vue'
 import Perfil from '@/paginas/perfil.vue'
+import ResetPassword from "@/paginas/ResetPassword.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL || '/'),
@@ -27,6 +28,7 @@ const router = createRouter({
     { path: '/carrito',    name: 'carrito',    component: Carrito },
     { path: '/acerca',     name: 'acerca',     component: Acerca },
     { path: '/:pathMatch(.*)*', redirect: '/' },
+    { path: "/reset-password", name: "reset-password", component: ResetPassword },
   ],
 })
 
@@ -52,4 +54,6 @@ router.beforeEach((to) => {
 })
 
 export default router
+
+
 

@@ -6,12 +6,21 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.mail import send_mail
+from django.conf import settings
+
+
 
 from .serializers import (
     DispatchInfoSerializer,
     EmailTokenObtainPairSerializer,
     ProfileUpdateSerializer,
     RegisterSerializer,
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer
 )
 from .models import DispatchInfo
 from .permissions import IsOwnerOrAdmin
@@ -134,3 +143,65 @@ class DispatchInfoViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+
+
+
+
+class PasswordResetRequest(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        ser = PasswordResetRequestSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        email = ser.validated_data["email"]
+
+        # Siempre respondemos 200 para no filtrar existencia del usuario
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"ok": True}, status=status.HTTP_200_OK)
+
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = token_generator.make_token(user)
+
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        reset_link = f"{frontend_url}/reset-password?uid={uid}&token={token}"
+
+        subject = "Restablecer contraseña"
+        message = f"Hola,\n\nPara restablecer tu contraseña haz clic aquí:\n{reset_link}\n\nSi no lo solicitaste, ignora este mensaje."
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com")
+
+        # En dev puedes usar backend de consola. En prod, SMTP (SendGrid/Mailgun/Resend, etc.)
+        send_mail(subject, message, from_email, [email], fail_silently=not settings.DEBUG)
+
+        # (opcional en DEBUG) devolver el link para probar rápido
+        payload = {"ok": True}
+        if settings.DEBUG:
+            payload["debug_reset_link"] = reset_link
+        return Response(payload, status=status.HTTP_200_OK)
+
+
+class PasswordResetConfirm(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        ser = PasswordResetConfirmSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        uid = ser.validated_data["uid"]
+        token = ser.validated_data["token"]
+        new_password = ser.validated_data["new_password"]
+
+        try:
+            uid_int = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=uid_int)
+        except Exception:
+            return Response({"detail": "Enlace inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not token_generator.check_token(user, token):
+            return Response({"detail": "Token inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"ok": True, "message": "Contraseña actualizada."}, status=status.HTTP_200_OK)

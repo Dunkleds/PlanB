@@ -151,3 +151,10 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
 
 # Detrás de proxy (Railway)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+
+
+# ---------------- para reseteo de contraseña ----------------
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "no-reply@example.com"
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
