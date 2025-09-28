@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { api, loginWithEmailQuick, logout, getMe, updateProfileNames } from '@/lib/api'
 import { useCart } from '@/stores/cart'
 
-
 export interface RegisterPayload {
   email: string
   password: string
@@ -119,16 +118,3 @@ export const useAuth = defineStore('auth', {
     },
   },
 })
-
-
-
-
-export function requestPasswordReset(email: string) {
-  // POST /api/password-reset/  -> tu backend envía el enlace por email
-  return api.post("/api/password-reset/", { email });
-}
-
-export function confirmPasswordReset(params: { uid: string; token: string; new_password: string }) {
-  // POST /api/password-reset/confirm/
-  return api.post("/api/password-reset/confirm/", params);
-}

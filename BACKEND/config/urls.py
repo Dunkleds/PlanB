@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
-from users.views import PasswordResetRequest, PasswordResetConfirm
+
 from users.views import DispatchInfoViewSet, EmailTokenObtainPairView
 
 
@@ -28,6 +28,4 @@ urlpatterns = [
     path("", include(router.urls)),
     path("health/", health),
     path("", home),
-    path("api/password-reset/", PasswordResetRequest.as_view()),
-    path("api/password-reset/confirm/", PasswordResetConfirm.as_view()),
 ]
