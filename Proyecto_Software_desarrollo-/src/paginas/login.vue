@@ -56,7 +56,8 @@
               <button type="button" class="rounded-xl px-3 py-2 bg-[#3b5998] hover:opacity-95">Facebook</button>
               <button type="button" class="rounded-xl px-3 py-2 bg-[#db4437] hover:opacity-95">Google</button>
               <button type="button" class="rounded-xl px-3 py-2 bg-black hover:opacity-95">Apple</button>
-            </div> -->
+              <p class="mt-1 text-sm text-slate-300">Autenticacion de externos en Desarrollo.</p>
+            </div>
 
             <!-- CTA -->
             <div class="flex items-center justify-between">
