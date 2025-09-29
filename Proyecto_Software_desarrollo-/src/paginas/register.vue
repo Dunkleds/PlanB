@@ -104,7 +104,11 @@
         </div>
 
         <p class="mt-6 text-center text-sm text-slate-400">
-          Al registrarte aceptas nuestros <a href="#" class="underline underline-offset-4 hover:text-white">Términos</a>.
+          Al registrarte aceptas nuestros
+          <router-link
+            to="/terminos"
+            class="underline underline-offset-4 hover:text-white"
+            > Términos y Condiciones</router-link>
         </p>
       </div>
     </main>
