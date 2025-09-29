@@ -59,7 +59,7 @@
               <p class="mt-1 text-sm text-slate-300">Autenticacion de externos en Desarrollo.</p>
             </div>
 
-            <!-- CTA -->
+            <-- CTA -->
             <div class="flex items-center justify-between">
               <router-link to="/register" class="text-sm text-slate-300 hover:text-white underline underline-offset-4">
                 Crear cuenta
