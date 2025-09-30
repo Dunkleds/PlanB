@@ -12,6 +12,8 @@ import Register from '@/paginas/register.vue'
 import Carrito from '@/paginas/carrito.vue'
 import Acerca from '@/paginas/acerca.vue'
 import Privado from '@/paginas/privado.vue'
+import Perfil from '@/paginas/perfil.vue'
+import Terminos from "@/paginas/Terminos.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL || '/'),
@@ -22,13 +24,16 @@ const router = createRouter({
     { path: '/login',      name: 'login',      component: Login },
     { path: '/register',   name: 'register',   component: Register },
     { path: '/privado',    name: 'privado',    component: Privado,    meta: { requiresAuth: true } },
+    { path: '/perfil',    name: 'perfil',    component: Perfil,    meta: { requiresAuth: true } },
     { path: '/carrito',    name: 'carrito',    component: Carrito },
     { path: '/acerca',     name: 'acerca',     component: Acerca },
     { path: '/:pathMatch(.*)*', redirect: '/' },
+    { path: "/terminos", name: "terminos", component: Terminos, meta: { requiresAuth: false } }
   ],
 })
 
 // Guard mínimo: si la ruta pide auth y no hay token, manda a /login
+// NOTE: this guard stays local-storage based until an auth.init() bootstraps the user profile.
 router.beforeEach((to) => {
   if (!to.meta?.requiresAuth) return true
 
