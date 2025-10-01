@@ -2,7 +2,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/services/auth'
 
-// Páginas públicas y privadas existentes
+// ✅ Páginas públicas y privadas existentes
 import Home from '@/paginas/home.vue'
 import Inventario from '@/paginas/inventario.vue'
 import Reportes from '@/paginas/Reportes.vue'
@@ -11,23 +11,28 @@ import Register from '@/paginas/register.vue'
 import Carrito from '@/paginas/carrito.vue'
 import Acerca from '@/paginas/acerca.vue'
 import Privado from '@/paginas/privado.vue'
+import Perfil from '@/paginas/perfil.vue'
+import Terminos from "@/paginas/Terminos.vue"
 
-// ✅ NUEVAS páginas del administrador
-const AdminHome = () => import('@/paginas/Admin/adminHome.vue')
+// ✅ Nuevas páginas del administrador
+const AdminHome = () => import('@/paginas/Admin/AdminHome.vue')
 const AdminProductos = () => import('@/paginas/Admin/Productos.vue')
 const AdminBodegas = () => import('@/paginas/Admin/Bodegas.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL || '/'),
   routes: [
+    // Rutas públicas y de usuario
     { path: '/',           name: 'home',       component: Home },
     { path: '/inventario', name: 'inventario', component: Inventario, meta: { requiresAuth: true } },
     { path: '/reportes',   name: 'reportes',   component: Reportes,   meta: { requiresAuth: true } },
     { path: '/login',      name: 'login',      component: Login },
     { path: '/register',   name: 'register',   component: Register },
     { path: '/privado',    name: 'privado',    component: Privado,    meta: { requiresAuth: true } },
+    { path: '/perfil',     name: 'perfil',     component: Perfil,     meta: { requiresAuth: true } },
     { path: '/carrito',    name: 'carrito',    component: Carrito },
     { path: '/acerca',     name: 'acerca',     component: Acerca },
+    { path: '/terminos',   name: 'terminos',   component: Terminos,   meta: { requiresAuth: false } },
 
     // 🧩 Rutas del panel de administración
     {
@@ -54,24 +59,27 @@ const router = createRouter({
   ],
 })
 
-// ✅ Middleware de autenticación
+// ✅ Middleware global de autenticación y control de acceso
 router.beforeEach((to) => {
-  // si no requiere autenticación → continuar
+  // Si la ruta no requiere autenticación → continuar
   if (!to.meta?.requiresAuth) return true
 
   try {
     const auth = useAuth()
-    // si está autenticado, continuar
+
+    // Si el usuario está autenticado
     if (auth?.isAuth) {
-      // opcional: si es ruta admin, verificar rol
+      // Si la ruta es admin y el usuario no es admin → redirigir
       if (to.meta.isAdmin && !auth.user?.is_admin) {
-        return { name: 'home' } // o redirige a una página “no autorizado”
+        return { name: 'home' } // También podrías crear una vista “403 No autorizado”
       }
       return true
     }
-  } catch (_) {}
+  } catch (_) {
+    // Pinia aún no inicializado o error → continuar al fallback
+  }
 
-  // fallback: sin token → redirigir a login
+  // Fallback: sin token → redirigir a login
   const isAuth = !!localStorage.getItem('access_token')
   if (!isAuth) {
     return { name: 'login', query: { redirect: to.fullPath } }

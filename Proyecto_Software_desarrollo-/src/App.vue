@@ -1,7 +1,10 @@
 <template>
-  <RouterView />
+  <div class="min-h-screen bg-slate-900 text-white">
+    <AppHeader />
+    <router-view />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { RouterView } from 'vue-router'  // (opcional, pero claro)
+import AppHeader from '@/components/AppHeader.vue'
 </script>
