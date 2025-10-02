@@ -1,197 +1,181 @@
 <template>
   <div class="home min-h-screen bg-slate-900 text-white">
-    <!-- Header -->
-    <header
-      class="sticky top-0 z-50 backdrop-blur bg-slate-900/70 border-b border-white/10"
-      @keydown.esc="closeAll"
-    >
-      <nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <!-- Izquierda: botón menú + logo -->
-        <div class="flex items-center gap-3">
-          <!-- Botón menú móvil -->
-          <button
-            class="inline-flex items-center justify-center p-2 rounded-xl hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 lg:hidden"
-            :aria-expanded="menuOpen ? 'true' : 'false'"
-            aria-controls="mobile-menu"
-            @click="toggleMenu"
-          >
-            <span class="sr-only">Abrir menú</span>
-            <svg v-if="!menuOpen" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-            <svg v-else class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-
-          <!-- Logo -->
-          <router-link to="/" class="flex items-center gap-2 group">
-            <div class="h-8 w-8 rounded-xl bg-gradient-to-br from-fuchsia-500 to-indigo-500 shadow-md group-hover:scale-105 transition-transform"></div>
-            <h1 class="text-xl font-semibold tracking-tight">iEssence</h1>
-          </router-link>
-
-          <!-- Navegación desktop -->
-          <ul class="hidden lg:flex items-center gap-1 ml-6">
-            <li>
-              <router-link
-                to="/"
-                class="px-3 py-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
-                :class="isActive('/')"
-              >Inicio</router-link>
-            </li>
-            <li>
-              <router-link
-                to="/acerca"
-                class="px-3 py-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
-                :class="isActive('/acerca')"
-              >Acerca</router-link>
-            </li>
-            <li>
-              <router-link
-                to="/carrito"
-                class="px-3 py-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 relative"
-                :class="isActive('/carrito')"
-              >
-                Carro
-                <span
-                  v-if="cartCount>0"
-                  class="absolute -top-1 -right-2 text-[10px] leading-none rounded-full bg-fuchsia-500 px-1.5 py-0.5"
-                >{{ cartCount }}</span>
-              </router-link>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Derecha: acciones usuario -->
-        <div class="flex items-center gap-2">
-          <!-- Links auth (ajusta según tu estado real de sesión) -->
-          <router-link
-            to="/login"
-            class="hidden sm:inline-flex items-center px-3 py-2 rounded-lg border border-white/20 hover:border-white/40 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
-          >Login</router-link>
-
-          <router-link
-            to="/register"
-            class="hidden sm:inline-flex items-center px-3 py-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40"
-          >Registrarse</router-link>
-
-          <router-link
-            to="/privado"
-            class="hidden md:inline-flex items-center px-3 py-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
-          >Privado</router-link>
-
-          <!-- Dropdown usuario -->
-          <div class="relative">
-            <button
-              ref="userBtn"
-              @click="toggleUserMenu"
-              class="inline-flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
-              :aria-expanded="userMenuOpen ? 'true' : 'false'"
-              aria-haspopup="menu"
-            >
-              <span class="sr-only">Abrir menú de usuario</span>
-              <span class="h-8 w-8 rounded-full bg-white/15 grid place-items-center text-sm">👤</span>
-              <svg class="h-4 w-4 opacity-70" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-              </svg>
-            </button>
-
-            <!-- Panel dropdown -->
-            <transition
-              enter-active-class="transition ease-out duration-150"
-              enter-from-class="opacity-0 translate-y-1"
-              enter-to-class="opacity-100 translate-y-0"
-              leave-active-class="transition ease-in duration-100"
-              leave-from-class="opacity-100 translate-y-0"
-              leave-to-class="opacity-0 translate-y-1"
-            >
-              <div
-                v-if="userMenuOpen"
-                ref="userMenu"
-                class="absolute right-0 mt-2 w-56 rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur shadow-xl p-1"
-                role="menu"
-                @keydown.esc.stop="userMenuOpen=false"
-              >
-                <router-link to="/perfil" class="block px-3 py-2 rounded-lg hover:bg-white/10" role="menuitem">Perfil</router-link>
-                <router-link to="/privado" class="block px-3 py-2 rounded-lg hover:bg-white/10" role="menuitem">Panel privado</router-link>
-                <hr class="my-1 border-white/10">
-                <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10" role="menuitem">Cerrar sesión</button>
-              </div>
-            </transition>
-          </div>
-        </div>
-      </nav>
-
-      <!-- Menú móvil -->
-      <transition
-        enter-active-class="transition duration-150 ease-out"
-        enter-from-class="opacity-0 -translate-y-2"
-        enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition duration-100 ease-in"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 -translate-y-2"
-      >
-        <div
-          v-if="menuOpen"
-          id="mobile-menu"
-          class="lg:hidden border-t border-white/10 bg-slate-900/90 backdrop-blur"
-        >
-          <div class="px-4 py-3 space-y-1">
-            <router-link @click="closeAll" to="/" class="block px-3 py-2 rounded-lg hover:bg-white/10" :class="isActive('/')">Inicio</router-link>
-            <router-link @click="closeAll" to="/carrito" class="block px-3 py-2 rounded-lg hover:bg-white/10" :class="isActive('/carrito')">
-              Carro <span v-if="cartCount>0" class="ml-2 text-xs rounded-full bg-fuchsia-500 px-1.5 py-0.5 align-middle">{{ cartCount }}</span>
-            </router-link>
-            <router-link @click="closeAll" to="/acerca" class="block px-3 py-2 rounded-lg hover:bg-white/10" :class="isActive('/acerca')">Acerca de nosotros</router-link>
-
-            <div class="pt-2 mt-2 border-t border-white/10 grid grid-cols-2 gap-2">
-              <router-link @click="closeAll" to="/login" class="px-3 py-2 text-center rounded-lg border border-white/20 hover:bg-white/10">Login</router-link>
-              <router-link @click="closeAll" to="/register" class="px-3 py-2 text-center rounded-lg bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:opacity-95">Registrarse</router-link>
-              <router-link @click="closeAll" to="/privado" class="col-span-2 px-3 py-2 text-center rounded-lg hover:bg-white/10">Privado</router-link>
-            </div>
-          </div>
-        </div>
-      </transition>
-    </header>
-
-    <!-- Contenido -->
     <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-      <h2 class="text-3xl font-semibold tracking-tight">Bienvenido a iEssence</h2>
-      <p class="mt-2 text-slate-300">Pronto verás aquí el catálogo cuando el endpoint esté listo.</p>
+      <header class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
+        <div>
+          <h2 class="text-3xl font-semibold tracking-tight">Catálogo de productos</h2>
+          <p class="mt-1 text-slate-300">Descubre la selección de iEssence y agrégala a tu carrito.</p>
+        </div>
+        <button
+          v-if="isAuth && !isLoaded"
+          @click="reloadCart"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/20 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 text-sm"
+        >
+          <span>Cargar carrito</span>
+        </button>
+      </header>
+
+      <section class="mt-8">
+        <div v-if="loadingCatalog" class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur p-8 text-center">
+          <p class="text-slate-300">Cargando productos…</p>
+        </div>
+
+        <div
+          v-else-if="catalogError"
+          class="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-center text-sm text-red-200"
+        >
+          {{ catalogError }}
+        </div>
+
+        <div v-else>
+          <div
+            v-if="cartError"
+            class="mb-6 rounded-2xl border border-amber-500/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-200"
+          >
+            {{ cartError }}
+          </div>
+
+          <p v-if="products.length === 0" class="text-slate-300">No hay productos disponibles por ahora.</p>
+
+          <div
+            v-else
+            class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3"
+          >
+            <article
+              v-for="product in products"
+              :key="product.id"
+              class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur shadow-xl overflow-hidden flex flex-col"
+            >
+              <div class="relative h-48 bg-slate-800">
+                <img
+                  v-if="product.imagen_url"
+                  :src="product.imagen_url"
+                  :alt="product.nombre_producto"
+                  class="h-full w-full object-cover"
+                />
+                <div v-else class="flex h-full w-full items-center justify-center text-slate-400">
+                  <span class="text-sm">Sin imagen</span>
+                </div>
+                <span class="absolute top-3 left-3 rounded-full bg-fuchsia-500/80 px-3 py-1 text-xs uppercase tracking-wide">
+                  {{ product.marca }}
+                </span>
+              </div>
+
+              <div class="flex flex-1 flex-col gap-4 p-5">
+                <header class="space-y-1">
+                  <h3 class="text-xl font-semibold">{{ product.nombre_producto }}</h3>
+                  <p class="text-sm text-slate-300 line-clamp-3">{{ product.descripcion }}</p>
+                </header>
+
+                <footer class="mt-auto flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-slate-400">Disponible: {{ product.cantidad }}</p>
+                    <p class="text-lg font-semibold">{{ formatPrice(product.precio) }}</p>
+                  </div>
+                  <button
+                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 text-sm font-medium hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60"
+                    :disabled="pending(product.id) || cartLoading"
+                    @click="addProductToCart(product.id)"
+                  >
+                    <svg v-if="pending(product.id)" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="4" />
+                      <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="4" />
+                    </svg>
+                    <span v-else>Agregar</span>
+                    <span class="sr-only">{{ product.nombre_producto }}</span>
+                  </button>
+                </footer>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
-import { useRoute } from "vue-router";
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { api } from '@/lib/api'
+import { useAuth } from '@/services/auth'
+import { useCart } from '@/stores/cart'
 
-const route = useRoute();
-const menuOpen = ref(false);
-const userMenuOpen = ref(false);
-const cartCount = ref(0); // cámbialo cuando conectes tu estado real
+interface Product {
+  id: number
+  nombre_producto: string
+  cantidad: number
+  precio: string
+  marca: string
+  descripcion: string
+  imagen_url: string | null
+}
 
-const userBtn = ref<HTMLElement | null>(null);
-const userMenu = ref<HTMLElement | null>(null);
+const products = ref<Product[]>([])
+const loadingCatalog = ref(false)
+const catalogError = ref<string | null>(null)
+const pendingIds = ref(new Set<number>())
 
-const toggleMenu = () => (menuOpen.value = !menuOpen.value);
-const toggleUserMenu = () => (userMenuOpen.value = !userMenuOpen.value);
-const closeAll = () => { menuOpen.value = false; userMenuOpen.value = false; };
+const auth = useAuth()
+const cart = useCart()
+const { isAuth } = storeToRefs(auth)
+const { loading: cartLoading, isLoaded, error: cartError } = storeToRefs(cart)
+const router = useRouter()
+const route = useRoute()
 
-const handleClickOutside = (e: MouseEvent) => {
-  const t = e.target as Node;
-  if (userMenuOpen.value) {
-    if (userMenu.value && !userMenu.value.contains(t) && userBtn.value && !userBtn.value.contains(t)) {
-      userMenuOpen.value = false;
-    }
+const pending = (id: number) => pendingIds.value.has(id)
+
+const formatPrice = (value: string | number) => {
+  const amount = typeof value === 'number' ? value : Number(value)
+  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount)
+}
+
+const fetchProducts = async () => {
+  loadingCatalog.value = true
+  catalogError.value = null
+  try {
+    const { data } = await api.get<Product[]>('/api/products/')
+    products.value = data
+  } catch (error: any) {
+    catalogError.value = error?.response?.data?.detail ?? 'No se pudo cargar el catálogo'
+  } finally {
+    loadingCatalog.value = false
   }
-};
+}
 
-onMounted(() => document.addEventListener("click", handleClickOutside));
-onBeforeUnmount(() => document.removeEventListener("click", handleClickOutside));
+const addProductToCart = async (productId: number) => {
+  if (!isAuth.value) {
+    router.push({ name: 'login', query: { redirect: route.fullPath } })
+    return
+  }
 
-/** Aplica estilos de link activo sin depender de exact-active-class */
-const isActive = (to: string) => {
-  const active = route.path === to || route.path.startsWith(to) && to !== "/";
-  return active ? "bg-white/10" : "";
-};
+  const next = new Set(pendingIds.value)
+  next.add(productId)
+  pendingIds.value = next
+
+  try {
+    await cart.addToCart(productId, 1)
+  } catch (_error) {
+    // El store expone el mensaje de error; no hacemos nada extra aquí.
+  } finally {
+    const updated = new Set(pendingIds.value)
+    updated.delete(productId)
+    pendingIds.value = updated
+  }
+}
+
+const reloadCart = async () => {
+  if (isAuth.value) {
+    await cart.fetchCart()
+  }
+}
+
+onMounted(() => {
+  fetchProducts()
+  if (isAuth.value && !isLoaded.value) {
+    cart.fetchCart()
+  }
+})
+
 </script>

@@ -1,200 +1,162 @@
 <template>
-  <div class="auth-container">
-    <div class="auth-box">
-      <h2 class="title">Registro</h2>
-      <form @submit.prevent="register">
-        <input type="email" v-model="email" placeholder="Dirección de correo" required />
-        <input type="password" v-model="password" placeholder="Crear contraseña" required />
-        <input type="password" v-model="confirmPassword" placeholder="Repite contraseña" required />
-        <router-link to="/login" class="btn-link">Login</router-link>
+  <div class="min-h-screen bg-slate-900 text-white">
+    <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+      <div class="mx-auto w-full max-w-md">
+        <!-- Card -->
+        <div class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur p-6 sm:p-8 shadow-xl">
+          <h2 class="text-2xl font-semibold tracking-tight">Registro</h2>
+          <p class="mt-1 text-sm text-slate-300">Crea tu cuenta con correo y contraseña.</p>
 
-        <div class="social-buttons">
-          <button type="button" class="btn-social facebook">Facebook</button>
-          <button type="button" class="btn-social google">Google</button>
-          <button type="button" class="btn-social apple">Apple</button>
+          <form class="mt-6 space-y-4" @submit.prevent="doRegister" novalidate>
+            <label class="block">
+              <span class="sr-only">Nombre</span>
+              <input
+                v-model="firstName"
+                type="text"
+                required
+                autocomplete="given-name"
+                placeholder="Nombre"
+                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-white/40"
+              />
+            </label>
+
+            <label class="block">
+              <span class="sr-only">Apellido</span>
+              <input
+                v-model="lastName"
+                type="text"
+                required
+                autocomplete="family-name"
+                placeholder="Apellido"
+                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-white/40"
+              />
+            </label>
+
+            <!-- Email -->
+            <label class="block">
+              <span class="sr-only">Dirección de correo</span>
+              <input
+                v-model="email"
+                type="email"
+                required
+                autocomplete="email"
+                placeholder="Dirección de correo"
+                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-white/40"
+              />
+            </label>
+
+            <!-- Password -->
+            <label class="block">
+              <span class="sr-only">Crear contraseña</span>
+              <input
+                v-model="password"
+                type="password"
+                required
+                autocomplete="new-password"
+                placeholder="Crear contraseña"
+                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-white/40"
+              />
+            </label>
+
+            <!-- Confirm -->
+            <label class="block">
+              <span class="sr-only">Repite contraseña</span>
+              <input
+                v-model="confirmPassword"
+                type="password"
+                required
+                autocomplete="new-password"
+                placeholder="Repite contraseña"
+                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-white/40"
+              />
+            </label>
+
+            <!-- Error inline -->
+            <p v-if="errorMsg" class="text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
+              {{ errorMsg }}
+            </p>
+
+            <!-- Social (placeholder)
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button type="button" class="rounded-xl px-3 py-2 bg-[#3b5998] hover:opacity-95">Facebook</button>
+              <button type="button" class="rounded-xl px-3 py-2 bg-[#db4437] hover:opacity-95">Google</button>
+              <button type="button" class="rounded-xl px-3 py-2 bg-black hover:opacity-95">Apple</button>
+            </div>  -->
+
+            <!-- CTA -->
+            <div class="flex items-center justify-between">
+              <router-link to="/login" class="text-sm text-slate-300 hover:text-white underline underline-offset-4">
+                Ya tengo cuenta
+              </router-link>
+              <button
+                type="submit"
+                :disabled="loading"
+                class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-5 py-2.5 font-medium hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60"
+              >
+                <svg v-if="loading" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="4"/>
+                  <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="4"/>
+                </svg>
+                <span>Continuar</span>
+              </button>
+            </div>
+          </form>
         </div>
 
-        <button type="submit" class="btn-main">Continuar</button>
-      </form>
-    </div>
-    <!-- logo -->
-    <router-link to="/" class="logo-link">
-      <h1 class="logo">iEssence</h1>
-    </router-link>
+        <p class="mt-6 text-center text-sm text-slate-400">
+          Al registrarte aceptas nuestros
+          <router-link
+            to="/terminos"
+            class="underline underline-offset-4 hover:text-white"
+            > Términos y Condiciones</router-link>
+        </p>
+      </div>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
-/* ----------------------------
-   ✅ Imports
------------------------------ */
-import { ref } from 'vue'
-import axios from 'axios'
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useAuth } from "@/services/auth";
 
-/* ----------------------------
-   ✅ Axios con baseURL desde Vite
-   - En dev:  VITE_API_URL=http://127.0.0.1:8000
-   - En prod: VITE_API_URL=https://planb-production.up.railway.app
------------------------------ */
-const API_BASE = (import.meta.env.VITE_API_URL as string) || ''
-if (!API_BASE) {
-  console.warn('VITE_API_URL no está definida. Configúrala para que el registro funcione.')
-}
-const api = axios.create({ baseURL: API_BASE })
+const router = useRouter();
+const auth = useAuth();
 
-/* ----------------------------
-   ✅ Variables reactivas
------------------------------ */
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
+const firstName = ref("");
+const lastName = ref("");
+const email = ref("");
+const password = ref("");
+const confirmPassword = ref("");
+const loading = ref(false);
+const errorMsg = ref("");
 
-/* ----------------------------
-   ✅ Lógica de registro (conexión backend Django)
------------------------------ */
-const register = async () => {
+const doRegister = async () => {
+  errorMsg.value = "";
+
+  if (!firstName.value.trim() || !lastName.value.trim()) {
+    errorMsg.value = "Ingresa tu nombre y apellido";
+    return;
+  }
+
   if (password.value !== confirmPassword.value) {
-    alert('Las contraseñas no coinciden')
-    return
+    errorMsg.value = "Las contraseñas no coinciden";
+    return;
   }
 
+  loading.value = true;
   try {
-    // OJO: usar slash final en /api/register/
-    const { data } = await api.post('/api/register/', {
-      email: email.value,
-      password: password.value
-    })
-
-    alert(data?.message ?? 'Usuario creado con éxito')
-    email.value = ''
-    password.value = ''
-    confirmPassword.value = ''
-  } catch (error: unknown) {
-    const err = error as any
-    const msg =
-      err?.response?.data?.error ||
+    await auth.register(email.value, password.value, firstName.value.trim(), lastName.value.trim());
+    router.push({ name: 'perfil', query: { registered: '1' } });
+  } catch (err: any) {
+    errorMsg.value =
+      err?.response?.data?.message ||
       err?.response?.data?.detail ||
+      err?.response?.data?.error ||
       err?.message ||
-      'Error en el registro'
-    alert(String(msg))
+      "Error en el registro";
+  } finally {
+    loading.value = false;
   }
-}
+};
 </script>
-
-<style scoped>
-/* Contenedor principal centrado */
-.auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: #1f1f2e;
-  color: white;
-}
-
-/* Caja del formulario */
-.auth-box {
-  background: #2c2c3e;
-  padding: 2rem;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Título */
-.title {
-  margin-bottom: 1.5rem;
-  font-size: 1.8rem;
-  font-weight: bold;
-}
-
-/* Inputs */
-input {
-  display: block;
-  width: 100%;
-  padding: 0.8rem;
-  margin: 0.7rem 0;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  background: #3a3a4d;
-  color: white;
-  font-size: 1rem;
-}
-
-input::placeholder {
-  color: #b0b0c3;
-}
-
-/* Botones sociales */
-.social-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin: 1rem 0;
-}
-
-.btn-social {
-  flex: 1;
-  margin: 0 0.3rem;
-  padding: 0.6rem;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  transition: transform 0.2s ease;
-}
-
-.btn-social:hover {
-  transform: scale(1.05);
-}
-
-.facebook {
-  background: #3b5998;
-  color: white;
-}
-
-.google {
-  background: #db4437;
-  color: white;
-}
-
-.apple {
-  background: #000;
-  color: white;
-}
-
-/* Botón principal */
-.btn-main {
-  width: 100%;
-  padding: 0.8rem;
-  border-radius: 8px;
-  border: none;
-  background: #4cafef;
-  color: white;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 1rem;
-  transition: background 0.2s ease;
-}
-
-.btn-main:hover {
-  background: #369ad6;
-}
-
-.logo-link {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  color: white;
-  text-decoration: none;
-  font-size: 1.8rem;
-  font-weight: bold;
-}
-
-.logo {
-  margin: 0;
-}
-</style>
