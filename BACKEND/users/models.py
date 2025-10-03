@@ -27,6 +27,10 @@ class DispatchInfo(models.Model):
     country = models.CharField(max_length=60, default="Chile")
     postal_code = models.CharField(max_length=20, blank=True)
 
+    # 🧭 Nuevos campos
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+
     is_default = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)

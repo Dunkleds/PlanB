@@ -3,7 +3,7 @@ import App from './App.vue'
 import router from './router'
 import { createPinia } from 'pinia'
 import { useAuth } from '@/services/auth'
-
+import 'leaflet/dist/leaflet.css'
 // IMPORTANTE: importa el CSS de Tailwind
 import './assets/tailwind.css'
 
