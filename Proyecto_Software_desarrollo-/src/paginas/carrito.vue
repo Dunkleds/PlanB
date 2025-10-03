@@ -140,7 +140,7 @@ const route = useRoute()
 const { isAuth } = storeToRefs(auth)
 const { items, summary, loading, error, isLoaded } = storeToRefs(cart)
 
-const pendingIds = ref(new Set<number>())
+const pendingIds = ref(new Set<string>())
 const fallbackImage = 'https://via.placeholder.com/150?text=Producto'
 
 const cartLoading = computed(() => loading.value)
@@ -154,32 +154,36 @@ const formatCLP = (value: number | string) => {
 
 const totalFormatted = computed(() => formatCLP(summary.value.totalAmount))
 
-const itemPending = (id: number) => pendingIds.value.has(id)
+const idKey = (value: number | string) => String(value)
 
-const changeQuantity = async (productId: number, nextQuantity: number) => {
+const itemPending = (id: number | string) => pendingIds.value.has(idKey(id))
+
+const changeQuantity = async (productId: number | string, nextQuantity: number) => {
   if (itemPending(productId)) return
+  const key = idKey(productId)
   const updated = new Set(pendingIds.value)
-  updated.add(productId)
+  updated.add(key)
   pendingIds.value = updated
   try {
     await cart.updateQuantity(productId, nextQuantity)
   } finally {
     const cleared = new Set(pendingIds.value)
-    cleared.delete(productId)
+    cleared.delete(key)
     pendingIds.value = cleared
   }
 }
 
-const removeItem = async (productId: number) => {
+const removeItem = async (productId: number | string) => {
   if (itemPending(productId)) return
+  const key = idKey(productId)
   const updated = new Set(pendingIds.value)
-  updated.add(productId)
+  updated.add(key)
   pendingIds.value = updated
   try {
     await cart.removeItem(productId)
   } finally {
     const cleared = new Set(pendingIds.value)
-    cleared.delete(productId)
+    cleared.delete(key)
     pendingIds.value = cleared
   }
 }

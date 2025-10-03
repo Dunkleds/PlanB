@@ -18,6 +18,7 @@ import Terminos from "@/paginas/Terminos.vue"
 const AdminHome = () => import('@/paginas/Admin/AdminHome.vue')
 const AdminProductos = () => import('@/paginas/Admin/Productos.vue')
 const AdminBodegas = () => import('@/paginas/Admin/Bodegas.vue')
+const ProductDetail = () => import('@/paginas/producto-detalle.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL || '/'),
@@ -33,25 +34,26 @@ const router = createRouter({
     { path: '/carrito',    name: 'carrito',    component: Carrito },
     { path: '/acerca',     name: 'acerca',     component: Acerca },
     { path: '/terminos',   name: 'terminos',   component: Terminos,   meta: { requiresAuth: false } },
+    { path: '/productos/:id', name: 'product-detail', component: ProductDetail },
 
     // 🧩 Rutas del panel de administración
     {
       path: '/admin',
       name: 'admin-home',
       component: AdminHome,
-      meta: { requiresAuth: true, isAdmin: true }
+      meta: { requiresAuth: true }
     },
     {
       path: '/admin/productos',
       name: 'admin-productos',
       component: AdminProductos,
-      meta: { requiresAuth: true, isAdmin: true }
+      meta: { requiresAuth: true }
     },
     {
       path: '/admin/bodegas',
       name: 'admin-bodegas',
       component: AdminBodegas,
-      meta: { requiresAuth: true, isAdmin: true }
+      meta: { requiresAuth: true }
     },
 
     // Ruta por defecto
@@ -69,10 +71,6 @@ router.beforeEach((to) => {
 
     // Si el usuario está autenticado
     if (auth?.isAuth) {
-      // Si la ruta es admin y el usuario no es admin → redirigir
-      if (to.meta.isAdmin && !auth.user?.is_admin) {
-        return { name: 'home' } // También podrías crear una vista “403 No autorizado”
-      }
       return true
     }
   } catch (_) {

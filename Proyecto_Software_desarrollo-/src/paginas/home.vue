@@ -67,23 +67,75 @@
                   <p class="text-sm text-slate-300 line-clamp-3">{{ product.descripcion }}</p>
                 </header>
 
-                <footer class="mt-auto flex items-center justify-between">
-                  <div>
-                    <p class="text-sm text-slate-400">Disponible: {{ product.cantidad }}</p>
-                    <p class="text-lg font-semibold">{{ formatPrice(product.precio) }}</p>
+                <footer class="mt-auto flex flex-col gap-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-sm text-slate-400">Disponible: {{ product.cantidad }}</p>
+                      <p class="text-lg font-semibold">{{ formatPrice(product.precio) }}</p>
+                    </div>
+                    <RouterLink
+                      :to="{ name: 'product-detail', params: { id: product.id } }"
+                      class="text-sm text-fuchsia-300 hover:text-fuchsia-200"
+                    >
+                      Ver detalle
+                    </RouterLink>
                   </div>
-                  <button
-                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 text-sm font-medium hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60"
-                    :disabled="pending(product.id) || cartLoading"
-                    @click="addProductToCart(product.id)"
-                  >
-                    <svg v-if="pending(product.id)" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="4" />
-                      <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="4" />
-                    </svg>
-                    <span v-else>Agregar</span>
-                    <span class="sr-only">{{ product.nombre_producto }}</span>
-                  </button>
+                  <div class="flex flex-wrap items-center justify-end gap-3" :class="{ 'justify-between': isSelecting(product.id) }">
+                    <div
+                      v-if="isSelecting(product.id)"
+                      class="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm"
+                    >
+                      <button
+                        type="button"
+                        class="rounded-full bg-white/10 px-2 py-1 text-lg leading-none text-white transition hover:bg-white/20"
+                        @click="decrementQuantity(product.id)"
+                      >
+                        −
+                      </button>
+                      <span class="min-w-[2ch] text-center font-semibold">{{ getDraftQuantity(product.id) }}</span>
+                      <button
+                        type="button"
+                        class="rounded-full bg-white/10 px-2 py-1 text-lg leading-none text-white transition hover:bg-white/20"
+                        @click="incrementQuantity(product.id, product.cantidad)"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <button
+                      v-if="isSelecting(product.id)"
+                      class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 text-sm font-medium hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60"
+                      :disabled="pending(product.id) || cartLoading || product.cantidad <= 0"
+                      @click="confirmAdd(product)"
+                    >
+                      <svg v-if="pending(product.id)" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="4" />
+                        <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="4" />
+                      </svg>
+                      <span v-else>Confirmar</span>
+                      <span class="sr-only">Confirmar {{ product.nombre_producto }}</span>
+                    </button>
+
+                    <button
+                      v-if="isSelecting(product.id)"
+                      type="button"
+                      class="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
+                      :disabled="pending(product.id) || cartLoading"
+                      @click="cancelSelection(product.id)"
+                    >
+                      Cancelar
+                    </button>
+
+                    <button
+                      v-else
+                      class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 text-sm font-medium hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60"
+                      :disabled="pending(product.id) || cartLoading || product.cantidad <= 0"
+                      @click="openQuantitySelector(product.id, product.cantidad)"
+                    >
+                      <span>Agregar</span>
+                      <span class="sr-only">{{ product.nombre_producto }}</span>
+                    </button>
+                  </div>
                 </footer>
               </div>
             </article>
@@ -103,10 +155,10 @@ import { useAuth } from '@/services/auth'
 import { useCart } from '@/stores/cart'
 
 interface Product {
-  id: number
+  id: number | string
   nombre_producto: string
   cantidad: number
-  precio: string
+  precio: string | number
   marca: string
   descripcion: string
   imagen_url: string | null
@@ -115,7 +167,7 @@ interface Product {
 const products = ref<Product[]>([])
 const loadingCatalog = ref(false)
 const catalogError = ref<string | null>(null)
-const pendingIds = ref(new Set<number>())
+const pendingIds = ref(new Set<string>())
 
 const auth = useAuth()
 const cart = useCart()
@@ -124,7 +176,62 @@ const { loading: cartLoading, isLoaded, error: cartError } = storeToRefs(cart)
 const router = useRouter()
 const route = useRoute()
 
-const pending = (id: number) => pendingIds.value.has(id)
+const quantityDrafts = ref<Record<string, number>>({})
+
+const idKey = (value: Product['id']) => String(value)
+
+const pending = (id: Product['id']) => pendingIds.value.has(idKey(id))
+
+const getDraftQuantity = (productId: Product['id']) => {
+  const key = idKey(productId)
+  return quantityDrafts.value[key] ?? 1
+}
+
+const isSelecting = (productId: Product['id']) => {
+  const key = idKey(productId)
+  return Object.prototype.hasOwnProperty.call(quantityDrafts.value, key)
+}
+
+const openQuantitySelector = (productId: Product['id'], available: number) => {
+  if (available <= 0) return
+  const key = idKey(productId)
+  quantityDrafts.value = {
+    ...quantityDrafts.value,
+    [key]: Math.min(quantityDrafts.value[key] ?? 1, available),
+  }
+}
+
+const cancelSelection = (productId: Product['id']) => {
+  if (!isSelecting(productId)) return
+  const key = idKey(productId)
+  const { [key]: _removed, ...rest } = quantityDrafts.value
+  quantityDrafts.value = rest
+}
+
+const setDraftQuantity = (productId: Product['id'], quantity: number, available: number) => {
+  if (available <= 0) return
+  const safeQuantity = Math.max(1, Math.min(quantity, available))
+  const key = idKey(productId)
+  quantityDrafts.value = {
+    ...quantityDrafts.value,
+    [key]: safeQuantity,
+  }
+}
+
+const incrementQuantity = (productId: Product['id'], available: number) => {
+  const current = getDraftQuantity(productId)
+  setDraftQuantity(productId, current + 1, available)
+}
+
+const decrementQuantity = (productId: Product['id']) => {
+  const current = getDraftQuantity(productId)
+  if (current <= 1) return
+  const key = idKey(productId)
+  quantityDrafts.value = {
+    ...quantityDrafts.value,
+    [key]: current - 1,
+  }
+}
 
 const formatPrice = (value: string | number) => {
   const amount = typeof value === 'number' ? value : Number(value)
@@ -144,24 +251,37 @@ const fetchProducts = async () => {
   }
 }
 
-const addProductToCart = async (productId: number) => {
+const addProductToCart = async (productId: Product['id'], quantity = 1) => {
   if (!isAuth.value) {
     router.push({ name: 'login', query: { redirect: route.fullPath } })
-    return
+    return false
   }
 
+  const key = idKey(productId)
   const next = new Set(pendingIds.value)
-  next.add(productId)
+  next.add(key)
   pendingIds.value = next
 
+  let wasSuccessful = false
   try {
-    await cart.addToCart(productId, 1)
+    await cart.addToCart(productId, quantity)
+    wasSuccessful = true
   } catch (_error) {
     // El store expone el mensaje de error; no hacemos nada extra aquí.
   } finally {
     const updated = new Set(pendingIds.value)
-    updated.delete(productId)
+    updated.delete(key)
     pendingIds.value = updated
+  }
+
+  return wasSuccessful
+}
+
+const confirmAdd = async (product: Product) => {
+  const quantity = getDraftQuantity(product.id)
+  const success = await addProductToCart(product.id, quantity)
+  if (success) {
+    cancelSelection(product.id)
   }
 }
 

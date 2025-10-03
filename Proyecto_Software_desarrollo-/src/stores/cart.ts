@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { api } from '@/lib/api'
 
 export interface CartProduct {
-  id: number
+  id: number | string
   nombre_producto: string
   cantidad: number
   precio: string
@@ -12,7 +12,7 @@ export interface CartProduct {
 }
 
 export interface CartItem {
-  id: number
+  id: number | string
   product: CartProduct
   quantity: number
   line_total: string
@@ -96,7 +96,7 @@ export const useCart = defineStore('cart', {
       }
     },
 
-    async addToCart(productId: number, quantity = 1) {
+    async addToCart(productId: number | string, quantity = 1) {
       this.error = null
       try {
         const { data } = await api.post<CartResponse>('/api/cart/', {
@@ -110,10 +110,11 @@ export const useCart = defineStore('cart', {
       }
     },
 
-    async updateQuantity(productId: number, quantity: number) {
+    async updateQuantity(productId: number | string, quantity: number) {
       if (quantity < 0) quantity = 0
       try {
-        const { data } = await api.patch<CartResponse>(`/api/cart/${productId}/`, { quantity })
+        const pathId = encodeURIComponent(String(productId))
+        const { data } = await api.patch<CartResponse>(`/api/cart/${pathId}/`, { quantity })
         this.applyPayload(data)
       } catch (error: any) {
         this.error = error?.response?.data?.detail ?? 'No se pudo actualizar la cantidad'
@@ -121,9 +122,10 @@ export const useCart = defineStore('cart', {
       }
     },
 
-    async removeItem(productId: number) {
+    async removeItem(productId: number | string) {
       try {
-        const { data } = await api.delete<CartResponse>(`/api/cart/${productId}/`)
+        const pathId = encodeURIComponent(String(productId))
+        const { data } = await api.delete<CartResponse>(`/api/cart/${pathId}/`)
         this.applyPayload(data)
       } catch (error: any) {
         this.error = error?.response?.data?.detail ?? 'No se pudo eliminar el producto'
