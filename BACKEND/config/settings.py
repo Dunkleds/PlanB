@@ -155,8 +155,7 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "users.validators.StrongPasswordValidator",
         "OPTIONS": {"min_length": 10},
     },
-    {"NAME": "users.validators.UpperLowerSymbolValidator"},
 ]

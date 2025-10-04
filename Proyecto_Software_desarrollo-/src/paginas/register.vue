@@ -45,43 +45,84 @@
               />
             </label>
 
-            <!-- Password -->
-            <label class="block">
-              <span class="sr-only">Crear contraseña</span>
-              <input
-                v-model="password"
-                type="password"
-                required
-                autocomplete="new-password"
-                placeholder="Crear contraseña"
-                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-white/40"
-              />
-            </label>
+            <!-- Password (con mostrar/ocultar) -->
+            <div class="relative">
+              <label class="block">
+                <span class="sr-only">Crear contraseña</span>
+                <input
+                  :type="showPwd ? 'text' : 'password'"
+                  v-model="password"
+                  required
+                  autocomplete="new-password"
+                  placeholder="Crear contraseña"
+                  class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 pr-12 outline-none focus:ring-2 focus:ring-white/40"
+                />
+              </label>
+              <button
+                type="button"
+                @click="showPwd = !showPwd"
+                class="absolute inset-y-0 right-0 px-3 grid place-items-center text-slate-300 hover:text-white"
+                :aria-pressed="showPwd ? 'true' : 'false'"
+              >
+                <span class="sr-only">Mostrar/ocultar contraseña</span>
+                <!-- ojo abierto/cerrado -->
+                <svg v-if="!showPwd" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M2.036 12.322a1 1 0 010-.644C3.423 7.51 7.36 5 12 5c4.64 0 8.577 2.51 9.964 6.678.05.161.05.335 0 .496C20.576 16.49 16.639 19 12 19c-4.64 0-8.577-2.51-9.964-6.678z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M3 3l18 18M10.585 10.585A3 3 0 0013.5 13.5M6.79 6.79C4.95 7.864 3.6 9.47 2.964 11.356a1 1 0 000 .644C4.423 16.49 8.36 19 13 19c1.43 0 2.79-.25 4.037-.708M9.88 4.252A10.9 10.9 0 0113 4c4.64 0 8.577 2.51 9.964 6.678.05.161.05.335 0 .496a11.04 11.04 0 01-2.29 3.57"/>
+                </svg>
+              </button>
+            </div>
 
-            <!-- Confirm -->
-            <label class="block">
-              <span class="sr-only">Repite contraseña</span>
-              <input
-                v-model="confirmPassword"
-                type="password"
-                required
-                autocomplete="new-password"
-                placeholder="Repite contraseña"
-                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-white/40"
-              />
-            </label>
+            <!-- Confirm Password (con mostrar/ocultar) -->
+            <div class="relative">
+              <label class="block">
+                <span class="sr-only">Repite contraseña</span>
+                <input
+                  :type="showPwd2 ? 'text' : 'password'"
+                  v-model="confirmPassword"
+                  required
+                  autocomplete="new-password"
+                  placeholder="Repite contraseña"
+                  class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 pr-12 outline-none focus:ring-2 focus:ring-white/40"
+                />
+              </label>
+              <button
+                type="button"
+                @click="showPwd2 = !showPwd2"
+                class="absolute inset-y-0 right-0 px-3 grid place-items-center text-slate-300 hover:text-white"
+                :aria-pressed="showPwd2 ? 'true' : 'false'"
+              >
+                <span class="sr-only">Mostrar/ocultar contraseña</span>
+                <svg v-if="!showPwd2" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M2.036 12.322a1 1 0 010-.644C3.423 7.51 7.36 5 12 5c4.64 0 8.577 2.51 9.964 6.678.05.161.05.335 0 .496C20.576 16.49 16.639 19 12 19c-4.64 0-8.577-2.51-9.964-6.678z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M3 3l18 18M10.585 10.585A3 3 0 0013.5 13.5M6.79 6.79C4.95 7.864 3.6 9.47 2.964 11.356a1 1 0 000 .644C4.423 16.49 8.36 19 13 19c1.43 0 2.79-.25 4.037-.708M9.88 4.252A10.9 10.9 0 0113 4c4.64 0 8.577 2.51 9.964 6.678.05.161.05.335 0 .496a11.04 11.04 0 01-2.29 3.57"/>
+                </svg>
+              </button>
+            </div>
 
             <!-- Error inline -->
-            <p v-if="errorMsg" class="text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
+            <p
+              v-if="errorMsg"
+              class="text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2 whitespace-pre-line"
+            >
               {{ errorMsg }}
             </p>
-
-            <!-- Social (placeholder)
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button type="button" class="rounded-xl px-3 py-2 bg-[#3b5998] hover:opacity-95">Facebook</button>
-              <button type="button" class="rounded-xl px-3 py-2 bg-[#db4437] hover:opacity-95">Google</button>
-              <button type="button" class="rounded-xl px-3 py-2 bg-black hover:opacity-95">Apple</button>
-            </div>  -->
 
             <!-- CTA -->
             <div class="flex items-center justify-between">
@@ -108,7 +149,7 @@
           <router-link
             to="/terminos"
             class="underline underline-offset-4 hover:text-white"
-            > Términos y Condiciones</router-link>
+          > Términos y Condiciones</router-link>
         </p>
       </div>
     </main>
@@ -130,6 +171,10 @@ const password = ref("");
 const confirmPassword = ref("");
 const loading = ref(false);
 const errorMsg = ref("");
+
+// toggles de visibilidad
+const showPwd = ref(false);
+const showPwd2 = ref(false);
 
 const doRegister = async () => {
   errorMsg.value = "";
